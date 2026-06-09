@@ -29,6 +29,7 @@ function EtfSliderRow({
 
   // Sync from parent if it changes externally (e.g., Reset Defaults)
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLocalWeight(Math.round(etf.globalWeight || 0));
   }, [etf.globalWeight]);
 

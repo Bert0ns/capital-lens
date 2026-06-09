@@ -76,14 +76,16 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
 
   const concentrationData = useMemo(() => {
     const allHoldings = aggregateTopHoldings(etfs, 50);
+    const result = [];
     let cumulative = 0;
-    return allHoldings.map((h, i) => {
-      cumulative += h.value;
-      return {
+    for (let i = 0; i < allHoldings.length; i++) {
+      cumulative += allHoldings[i].value;
+      result.push({
         name: `Top ${i + 1}`,
         value: cumulative,
-      };
-    });
+      });
+    }
+    return result;
   }, [etfs]);
 
   const weightDistributionData = useMemo(() => {

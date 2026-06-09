@@ -19,6 +19,28 @@ interface EtfBarChartCardProps {
   colorOffset?: number;
 }
 
+const CustomTooltip = ({
+  active,
+  payload,
+  unit,
+}: {
+  active?: boolean;
+  payload?: Array<Record<string, unknown>>;
+  unit: string;
+}) => {
+  if (active && payload && payload.length) {
+    return (
+      <Card className="px-3 py-2 border-border shadow-lg rounded-lg text-sm border">
+        <p className="font-medium text-foreground">{payload[0].payload.name}</p>
+        <p className="text-primary font-semibold">
+          {payload[0].value.toLocaleString()} {unit}
+        </p>
+      </Card>
+    );
+  }
+  return null;
+};
+
 export function EtfBarChartCard({
   title,
   info,
@@ -26,20 +48,6 @@ export function EtfBarChartCard({
   unit,
   colorOffset = 0,
 }: EtfBarChartCardProps) {
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <Card className="px-3 py-2 border-border shadow-lg rounded-lg text-sm border">
-          <p className="font-medium text-foreground">{payload[0].payload.name}</p>
-          <p className="text-primary font-semibold">
-            {payload[0].value.toLocaleString()} {unit}
-          </p>
-        </Card>
-      );
-    }
-    return null;
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -47,7 +55,7 @@ export function EtfBarChartCard({
       </CardHeader>
       <CardContent>
         <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
             <BarChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
               <XAxis
@@ -66,7 +74,10 @@ export function EtfBarChartCard({
                 axisLine={false}
                 tickFormatter={(val) => `${val}`}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)' }} />
+              <Tooltip
+                content={(props) => <CustomTooltip {...props} unit={unit} />}
+                cursor={{ fill: 'var(--muted)' }}
+              />
               <Bar dataKey="value" radius={[4, 4, 0, 0]} barSize={40}>
                 {data.map((entry, index) => (
                   <Cell

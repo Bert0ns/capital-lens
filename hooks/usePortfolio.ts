@@ -9,6 +9,7 @@ const DEFAULT_ETFS = [
   {
     name: 'Vanguard North America',
     issuer: 'Vanguard' as Issuer,
+    isin: 'IE00BK5BQW10',
     ter: 0.08,
     path: '/static/example_csv/vanguard-north-america.csv',
     weight: 25,
@@ -21,6 +22,7 @@ const DEFAULT_ETFS = [
   {
     name: 'Amundi Stoxx Europe 600',
     issuer: 'Amundi' as Issuer,
+    isin: 'LU0908500753',
     ter: 0.07,
     path: '/static/example_csv/amundi-stoxx-europe-600.csv',
     weight: 30,
@@ -33,6 +35,7 @@ const DEFAULT_ETFS = [
   {
     name: 'Amundi Prime Japan',
     issuer: 'Amundi' as Issuer,
+    isin: 'LU2089238385',
     ter: 0.05,
     path: '/static/example_csv/amundi-prime-japan.csv',
     weight: 5,
@@ -45,6 +48,7 @@ const DEFAULT_ETFS = [
   {
     name: 'iShares MSCI EM',
     issuer: 'iShares' as Issuer,
+    isin: 'IE00BKM4GZ66',
     ter: 0.18,
     path: '/static/example_csv/ishares-msci-em.csv',
     weight: 20,
@@ -57,6 +61,7 @@ const DEFAULT_ETFS = [
   {
     name: 'iShares MSCI Pacific ex-Japan',
     issuer: 'iShares' as Issuer,
+    isin: 'IE00B52MJY50',
     ter: 0.2,
     path: '/static/example_csv/ishares-msci-pacific.csv',
     weight: 20,
@@ -130,20 +135,21 @@ export function usePortfolio() {
           let parsed = JSON.parse(stored);
           if (parsed && parsed.length > 0) {
             // Auto-migrate legacy data that is missing the new fields
-            parsed = parsed.map((etf: any) => {
-              const defaultMatch = DEFAULT_ETFS.find((d) => d.name === etf.name);
+            parsed = parsed.map((etf: unknown) => {
+              const typedEtf = etf as Partial<EtfConfig>;
+              const defaultMatch = DEFAULT_ETFS.find((d) => d.name === typedEtf.name);
               return {
-                ...etf,
+                ...typedEtf,
                 replicationMethod:
-                  etf.replicationMethod || defaultMatch?.replicationMethod || 'Physical',
-                fundSize: etf.fundSize || defaultMatch?.fundSize || 0,
-                fundAge: etf.fundAge || defaultMatch?.fundAge || 0,
-                useOfProfit: etf.useOfProfit || defaultMatch?.useOfProfit || 'Accumulating',
-                domicile: etf.domicile || defaultMatch?.domicile || 'Ireland',
+                  typedEtf.replicationMethod || defaultMatch?.replicationMethod || 'Physical',
+                fundSize: typedEtf.fundSize || defaultMatch?.fundSize || 0,
+                fundAge: typedEtf.fundAge || defaultMatch?.fundAge || 0,
+                useOfProfit: typedEtf.useOfProfit || defaultMatch?.useOfProfit || 'Accumulating',
+                domicile: typedEtf.domicile || defaultMatch?.domicile || 'Ireland',
               };
             });
 
-            setEtfs(parsed);
+            setEtfs(parsed as EtfConfig[]);
             setIsLoaded(true);
             return;
           }

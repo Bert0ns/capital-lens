@@ -3,8 +3,6 @@
 import { useState } from 'react';
 import { Issuer, EtfConfig, ReplicationMethod, UseOfProfit, Domicile } from '../lib/types';
 import { getCsvParser } from '../lib/parsers';
-
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import {
   Dialog,
   DialogContent,
