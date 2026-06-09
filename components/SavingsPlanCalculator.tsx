@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { EtfConfig } from '../lib/types';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Slider } from './ui/slider';
 import { Input } from './ui/input';
+import { useSavingsPlan } from '../hooks/useSavingsPlan';
 import {
   AreaChart,
   Area,
@@ -22,52 +23,21 @@ interface SavingsPlanCalculatorProps {
 }
 
 export function SavingsPlanCalculator({ etfs, totalWeight }: SavingsPlanCalculatorProps) {
-  const [initialInvestment, setInitialInvestment] = useState(0);
-  const [monthlyContribution, setMonthlyContribution] = useState(833);
-  const [years, setYears] = useState(10);
-  const [expectedReturn, setExpectedReturn] = useState(6);
-  const [stopAccumulatingMonths, setStopAccumulatingMonths] = useState(6);
+  const {
+    initialInvestment,
+    setInitialInvestment,
+    monthlyContribution,
+    setMonthlyContribution,
+    years,
+    setYears,
+    expectedReturn,
+    setExpectedReturn,
+    setStopAccumulatingMonths,
+    clampedStopMonths,
+    projection: { chartData, finalTotalValue, finalInvested },
+  } = useSavingsPlan();
 
   const activeEtfs = etfs.filter((e) => e.globalWeight > 0);
-  const clampedStopMonths = Math.min(stopAccumulatingMonths, years * 12);
-
-  const { chartData, finalTotalValue, finalInvested } = useMemo(() => {
-    const data = [];
-    const monthlyRate = expectedReturn / 100 / 12;
-    const totalMonths = years * 12;
-
-    let currentTotal = initialInvestment;
-    let currentInvested = initialInvestment;
-
-    data.push({
-      year: 0,
-      invested: currentInvested,
-      value: Math.round(currentTotal),
-    });
-
-    for (let m = 1; m <= totalMonths; m++) {
-      const currentContribution = m <= clampedStopMonths ? monthlyContribution : 0;
-      currentTotal = currentTotal * (1 + monthlyRate) + currentContribution;
-      currentInvested += currentContribution;
-
-      if (m % 12 === 0 || m === totalMonths) {
-        const yearPoint = data.find((d) => d.year === m / 12);
-        if (!yearPoint) {
-          data.push({
-            year: m / 12,
-            invested: currentInvested,
-            value: Math.round(currentTotal),
-          });
-        }
-      }
-    }
-
-    return {
-      chartData: data,
-      finalTotalValue: currentTotal,
-      finalInvested: currentInvested,
-    };
-  }, [initialInvestment, monthlyContribution, years, expectedReturn, clampedStopMonths]);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', {

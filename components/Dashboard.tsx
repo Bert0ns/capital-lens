@@ -133,13 +133,13 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="hover:shadow-md transition-shadow">
-          <CardContent className="pt-6 flex flex-col justify-center">
+          <CardContent className="pt-0 flex flex-col justify-center">
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Weighted Avg TER</h3>
             <p className="text-3xl font-bold text-foreground">{avgTer.toFixed(2)}%</p>
           </CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow">
-          <CardContent className="pt-6 flex flex-col justify-center">
+          <CardContent className="pt-0 flex flex-col justify-center">
             <h3 className="text-sm font-medium text-muted-foreground mb-1">
               Total Assets Analyzed
             </h3>
@@ -149,7 +149,7 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
           </CardContent>
         </Card>
         <Card className="hover:shadow-md transition-shadow">
-          <CardContent className="pt-6 flex flex-col justify-center">
+          <CardContent className="pt-0 flex flex-col justify-center">
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Active ETFs</h3>
             <p className="text-3xl font-bold text-foreground">
               {etfs.filter((e) => e.globalWeight > 0).length}
