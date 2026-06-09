@@ -22,8 +22,8 @@ function EtfSliderRow({
   onRemove,
 }: {
   etf: EtfConfig;
-  onUpdateWeight: any;
-  onRemove: any;
+  onUpdateWeight: (id: string, weight: number) => void;
+  onRemove: (id: string) => void;
 }) {
   const [localWeight, setLocalWeight] = React.useState(Math.round(etf.globalWeight || 0));
 

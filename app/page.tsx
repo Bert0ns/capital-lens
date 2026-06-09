@@ -29,8 +29,8 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50 p-6 md:p-10 font-sans text-gray-900">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <header className="mb-10">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <header className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">
             ETF Portfolio Analyzer
           </h1>
@@ -40,11 +40,11 @@ export default function Home() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Form & Sliders */}
-          <div className="lg:col-span-1 space-y-8 flex flex-col">
+          <div className="lg:col-span-1 space-y-6 flex flex-col">
             <EtfForm onAddEtf={addEtf} />
-            <div className="flex-1 min-h-[400px]">
+            <div className="flex-1 min-h-100">
               <PortfolioSliders
                 etfs={etfs}
                 totalWeight={totalWeight}

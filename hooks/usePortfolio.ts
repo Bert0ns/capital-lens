@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { EtfConfig, Issuer } from '../lib/types';
 import { getCsvParser } from '../lib/parsers';
+import { toast } from 'sonner';
 
 const STORAGE_KEY = 'etf_portfolio_data';
 
@@ -75,9 +76,15 @@ export function usePortfolio() {
           }
         } catch (err) {
           console.error(`Failed to load default ETF: ${def.name}`, err);
+          toast.error('Failed to load default ETF', {
+            description: `${def.name} could not be loaded.`,
+          });
         }
       }
       setEtfs(loadedEtfs);
+      toast.success('Defaults Loaded', {
+        description: 'The default sample portfolio has been loaded.',
+      });
     } finally {
       setIsLoaded(true);
       setIsLoadingDefaults(false);
@@ -99,6 +106,9 @@ export function usePortfolio() {
         }
       } catch (e) {
         console.error('Failed to load portfolio from local storage', e);
+        toast.error('Storage Error', {
+          description: 'Failed to restore portfolio from local storage.',
+        });
       }
 
       // If we reach here, local storage is empty or invalid. Load defaults!

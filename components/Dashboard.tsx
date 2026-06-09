@@ -53,7 +53,13 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
     );
   }
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+  }: {
+    active?: boolean;
+    payload?: { name: string; value: number }[];
+  }) => {
     if (active && payload && payload.length) {
       return (
         <Card className="px-3 py-2 border-border shadow-lg rounded-lg text-sm border">
@@ -66,9 +72,9 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* KPI Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6 flex flex-col justify-center">
             <h3 className="text-sm font-medium text-muted-foreground mb-1">Weighted Avg TER</h3>
@@ -96,7 +102,7 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
       </div>
 
       {/* Charts Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Top Holdings Bar Chart */}
         <Card className="lg:col-span-2">
           <CardHeader>

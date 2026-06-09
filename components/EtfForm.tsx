@@ -9,6 +9,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { toast } from 'sonner';
 
 interface EtfFormProps {
   onAddEtf: (etf: EtfConfig) => void;
@@ -19,21 +20,21 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
   const [issuer, setIssuer] = useState<Issuer>('iShares');
   const [ter, setTer] = useState('');
   const [file, setFile] = useState<File | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     if (!name || !ter || !file) {
-      setError('Please fill all fields and upload a CSV file.');
+      toast.error('Missing fields', {
+        description: 'Please fill all fields and upload a CSV file.',
+      });
       return;
     }
 
     const terNumber = parseFloat(ter);
     if (isNaN(terNumber) || terNumber < 0) {
-      setError('Please enter a valid TER (e.g., 0.22)');
+      toast.error('Invalid TER', { description: 'Please enter a valid TER (e.g., 0.22)' });
       return;
     }
 
@@ -44,13 +45,15 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
       const result = await parser.parse(file);
 
       if (result.errors.length > 0 && result.holdings.length === 0) {
-        setError(`Failed to parse CSV: ${result.errors[0]}`);
+        toast.error('Parse Error', { description: `Failed to parse CSV: ${result.errors[0]}` });
         setIsLoading(false);
         return;
       }
 
       if (result.holdings.length === 0) {
-        setError('No valid holdings found in the CSV. Please check the file format.');
+        toast.error('Empty File', {
+          description: 'No valid holdings found in the CSV. Please check the file format.',
+        });
         setIsLoading(false);
         return;
       }
@@ -70,8 +73,13 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
       setName('');
       setTer('');
       setFile(null);
-    } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred while parsing the CSV.');
+      toast.success('ETF Added', {
+        description: `${name} has been successfully added to your portfolio.`,
+      });
+    } catch (err: unknown) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'An unexpected error occurred while parsing the CSV.';
+      toast.error('Error', { description: errorMessage });
     } finally {
       setIsLoading(false);
     }
@@ -133,12 +141,6 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
               className="cursor-pointer file:text-primary file:font-semibold"
             />
           </div>
-
-          {error && (
-            <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20">
-              {error}
-            </div>
-          )}
 
           <Button type="submit" disabled={isLoading} className="w-full">
             {isLoading ? 'Processing...' : 'Add ETF'}
