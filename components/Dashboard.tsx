@@ -157,7 +157,7 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
       </div>
 
       {/* Tabs Navigator */}
-      <div className="flex space-x-1 bg-muted/50 p-1.5 rounded-xl w-full max-w-fit shadow-sm">
+      <div className="flex gap-1 overflow-x-auto whitespace-nowrap bg-muted/50 p-1.5 rounded-xl w-full max-w-full lg:max-w-fit shadow-sm scrollbar-thin">
         {tabs.map((tab) => (
           <button
             key={tab}
