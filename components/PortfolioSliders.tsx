@@ -95,7 +95,7 @@ export default function PortfolioSliders({
 }: PortfolioSlidersProps) {
   if (etfs.length === 0) {
     return (
-      <Card className="h-full flex flex-col items-center justify-center text-center min-h-[300px] border-dashed">
+      <Card className="h-full flex flex-col items-center justify-center text-center min-h-75 border-dashed">
         <CardContent className="pt-6">
           <p className="font-medium text-muted-foreground">No ETFs added yet.</p>
           <p className="text-sm mt-1 text-muted-foreground/80">
@@ -157,7 +157,7 @@ export default function PortfolioSliders({
             />
           </div>
 
-          <div className="mt-2 text-xs text-center text-muted-foreground min-h-[16px]">
+          <div className="mt-2 text-xs text-center text-muted-foreground min-h-4">
             {isOverweight && 'Your portfolio exceeds 100%. Please reduce some weights.'}
             {isUnderweight && `You have ${(100 - totalWeight).toFixed(1)}% left to allocate.`}
             {!isOverweight && !isUnderweight && 'Perfectly allocated.'}

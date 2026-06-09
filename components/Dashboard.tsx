@@ -111,7 +111,7 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
 
   if (etfs.length === 0 || totalWeight === 0) {
     return (
-      <Card className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-[400px] h-full border-dashed">
+      <Card className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-100 h-full border-dashed">
         <CardContent className="pt-6">
           <h3 className="text-xl font-medium text-foreground mb-2">No Data to Display</h3>
           <p>Add ETFs and allocate weight to see your portfolio analysis.</p>

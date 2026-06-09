@@ -133,7 +133,7 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
       >
         <Plus size={20} /> Add New ETF
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-106.25 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New ETF</DialogTitle>
           <DialogDescription>
