@@ -25,8 +25,8 @@ export function TopHoldingsChart({ data }: TopHoldingsChartProps) {
         />
       </CardHeader>
       <CardContent>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+        <div style={{ width: '100%', height: 320, minWidth: 0 }}>
+          <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
               layout="vertical"

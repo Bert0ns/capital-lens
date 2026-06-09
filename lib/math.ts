@@ -10,27 +10,40 @@ function normalizeSector(sector: string): string {
 
   const s = sector.trim().toLowerCase();
 
-  if (
-    s === 'it' ||
-    s.includes('information technology') ||
-    s.includes('technology') ||
-    s.includes('tecnologia')
-  )
+  if (s === 'it' || s.includes('tech') || s.includes('tecnologia') || s.includes('informatica'))
     return 'Information Technology';
   if (s.includes('finanziari') || s.includes('financial') || s.includes('finance'))
     return 'Financials';
   if (s.includes('industr') || s.includes('industrali')) return 'Industrials';
-  if (s.includes('health') || s.includes('sanità') || s.includes('sanita') || s.includes('cura'))
+  if (
+    s.includes('health') ||
+    s.includes('sanità') ||
+    s.includes('sanita') ||
+    s.includes('cura') ||
+    s.includes('salute')
+  )
     return 'Healthcare';
-  if (s.includes('discrezionali') || s.includes('discretionary') || s.includes('cyclical'))
+  if (
+    s.includes('discrezionali') ||
+    s.includes('discretionary') ||
+    s.includes('cyclical') ||
+    s.includes('consumer services')
+  )
     return 'Consumer Discretionary';
-  if (s.includes('staples') || s.includes('beni di consumo') || s.includes('defensive'))
+  if (
+    s.includes('staples') ||
+    s.includes('beni di consumo') ||
+    s.includes('defensive') ||
+    s.includes('consumer goods')
+  )
     return 'Consumer Staples';
-  if (s.includes('material')) return 'Materials';
+  if (s.includes('material') || s.includes('materie prime')) return 'Materials';
   if (s.includes('energ')) return 'Energy';
   if (s.includes('utilit') || s.includes('pubblica utilità')) return 'Utilities';
-  if (s.includes('communication') || s.includes('telecom')) return 'Communication Services';
-  if (s.includes('real estate') || s.includes('immobiliare')) return 'Real Estate';
+  if (s.includes('communication') || s.includes('telecom') || s.includes('comunicazion'))
+    return 'Communication Services';
+  if (s.includes('real estate') || s.includes('immobiliare') || s.includes('property'))
+    return 'Real Estate';
 
   // Return the original sector with title case as fallback
   return sector.charAt(0).toUpperCase() + sector.slice(1);

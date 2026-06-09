@@ -24,6 +24,7 @@ Object.defineProperty(window, 'localStorage', {
 // Mock fetch for loadDefaults
 global.fetch = jest.fn(() =>
   Promise.resolve({
+    ok: true,
     blob: () => Promise.resolve(new Blob([''], { type: 'text/csv' })),
   })
 ) as jest.Mock;

@@ -21,3 +21,18 @@ global.ResizeObserver = class ResizeObserver {
   unobserve() {}
   disconnect() {}
 };
+
+import React from 'react';
+
+jest.mock('recharts', () => {
+  const OriginalModule = jest.requireActual('recharts');
+  return {
+    ...OriginalModule,
+    ResponsiveContainer: ({ children }: any) =>
+      React.createElement(
+        OriginalModule.ResponsiveContainer,
+        { width: 800, height: 800 },
+        children
+      ),
+  };
+});

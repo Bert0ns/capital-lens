@@ -25,8 +25,8 @@ export function ConcentrationChart({ data }: ConcentrationChartProps) {
         />
       </CardHeader>
       <CardContent>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+        <div style={{ width: '100%', height: 256, minWidth: 0 }}>
+          <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
               <XAxis
