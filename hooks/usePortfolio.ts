@@ -10,7 +10,7 @@ const DEFAULT_ETFS = [
     issuer: 'Vanguard' as Issuer,
     ter: 0.08,
     path: '/static/example_csv/vanguard-north-america.csv',
-    weight: 40,
+    weight: 25,
   },
   {
     name: 'Amundi Stoxx Europe 600',
@@ -24,21 +24,21 @@ const DEFAULT_ETFS = [
     issuer: 'Amundi' as Issuer,
     ter: 0.05,
     path: '/static/example_csv/amundi-prime-japan.csv',
-    weight: 10,
+    weight: 5,
   },
   {
     name: 'iShares MSCI EM',
     issuer: 'iShares' as Issuer,
     ter: 0.18,
     path: '/static/example_csv/ishares-msci-em.csv',
-    weight: 15,
+    weight: 20,
   },
   {
     name: 'iShares MSCI Pacific ex-Japan',
     issuer: 'iShares' as Issuer,
     ter: 0.2,
     path: '/static/example_csv/ishares-msci-pacific.csv',
-    weight: 5,
+    weight: 20,
   },
 ];
 
