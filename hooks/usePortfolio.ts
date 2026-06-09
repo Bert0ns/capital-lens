@@ -98,6 +98,7 @@ export function usePortfolio() {
             loadedEtfs.push({
               id: Math.random().toString(36).substring(7),
               name: def.name,
+              isin: def.isin,
               issuer: def.issuer,
               ter: def.ter,
               globalWeight: def.weight,
@@ -140,6 +141,7 @@ export function usePortfolio() {
               const defaultMatch = DEFAULT_ETFS.find((d) => d.name === typedEtf.name);
               return {
                 ...typedEtf,
+                isin: typedEtf.isin || defaultMatch?.isin || '',
                 replicationMethod:
                   typedEtf.replicationMethod || defaultMatch?.replicationMethod || 'Physical',
                 fundSize: typedEtf.fundSize || defaultMatch?.fundSize || 0,

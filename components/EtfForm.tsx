@@ -25,6 +25,7 @@ interface EtfFormProps {
 export default function EtfForm({ onAddEtf }: EtfFormProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
+  const [isin, setIsin] = useState('');
   const [issuer, setIssuer] = useState<Issuer>('iShares');
   const [ter, setTer] = useState('');
 
@@ -88,6 +89,7 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
       const newEtf: EtfConfig = {
         id: Math.random().toString(36).substring(7),
         name,
+        isin,
         issuer,
         ter: terNumber,
         globalWeight: 0,
@@ -103,6 +105,7 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
 
       // Reset form
       setName('');
+      setIsin('');
       setTer('');
       setFundSize('');
       setFundAge('');
@@ -138,15 +141,27 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
-          <div className="space-y-2">
-            <Label htmlFor="etf-name">ETF Name / Ticker</Label>
-            <Input
-              id="etf-name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., S&P 500 Information Technology"
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="etf-name">ETF Name / Ticker</Label>
+              <Input
+                id="etf-name"
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., S&P 500"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="etf-isin">ISIN Code</Label>
+              <Input
+                id="etf-isin"
+                type="text"
+                value={isin}
+                onChange={(e) => setIsin(e.target.value)}
+                placeholder="e.g., IE00BK5BQW10"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

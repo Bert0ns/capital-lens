@@ -15,6 +15,7 @@ export type Domicile = 'Ireland' | 'Luxembourg' | 'US' | 'Other';
 export interface EtfConfig {
   id: string; // Unique ID for this ETF entry
   name: string; // Ticker or name of the ETF
+  isin?: string; // ISIN code for the ETF
   issuer: Issuer;
   ter: number;
   globalWeight: number; // 0 to 100

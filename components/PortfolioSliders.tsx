@@ -47,8 +47,15 @@ function EtfSliderRow({
     <div className="space-y-3">
       <div className="flex justify-between items-start">
         <div>
-          <h3 className="font-medium text-sm text-foreground">{etf.name}</h3>
-          <p className="text-xs text-muted-foreground">
+          <h3 className="font-medium text-sm text-foreground flex items-center gap-2">
+            {etf.name}
+            {etf.isin && (
+              <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                {etf.isin}
+              </span>
+            )}
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1">
             {etf.issuer} • TER: {etf.ter}%
           </p>
         </div>
