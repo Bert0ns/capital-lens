@@ -1,63 +1,21 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { EtfConfig } from '../lib/types';
 import { aggregateBy, aggregateTopHoldings, calculateAverageTer } from '../lib/math';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  AreaChart,
-  Area,
-  Legend,
-} from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Tooltip as UITooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { Info } from 'lucide-react';
+import { Card, CardContent } from './ui/card';
 
-function ChartTitleWithInfo({ title, info }: { title: string; info: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <CardTitle>{title}</CardTitle>
-      <UITooltip delay={200}>
-        <TooltipTrigger className="inline-flex outline-none focus:ring-2 focus:ring-ring rounded-full">
-          <Info
-            size={16}
-            className="text-muted-foreground hover:text-foreground cursor-help transition-colors"
-          />
-        </TooltipTrigger>
-        <TooltipContent className="max-w-[250px] text-center leading-relaxed">
-          <p>{info}</p>
-        </TooltipContent>
-      </UITooltip>
-    </div>
-  );
-}
+// Extracted Chart Components
+import { TopHoldingsChart } from './charts/TopHoldingsChart';
+import { PieChartCard } from './charts/PieChartCard';
+import { ConcentrationChart } from './charts/ConcentrationChart';
+import { DistributionChart } from './charts/DistributionChart';
+import { EtfBarChartCard } from './charts/EtfBarChartCard';
 
 interface DashboardProps {
   etfs: EtfConfig[];
   totalWeight: number;
 }
-
-const COLORS = [
-  '#3b82f6',
-  '#10b981',
-  '#f59e0b',
-  '#ef4444',
-  '#8b5cf6',
-  '#06b6d4',
-  '#f97316',
-  '#64748b',
-  '#ec4899',
-  '#14b8a6',
-];
 
 export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
   const geoData = useMemo(() => aggregateBy(etfs, 'country').slice(0, 10), [etfs]);
@@ -74,6 +32,47 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
   }, [etfs]);
   const topHoldings = useMemo(() => aggregateTopHoldings(etfs, 10), [etfs]);
   const avgTer = useMemo(() => calculateAverageTer(etfs), [etfs]);
+
+  const aggregateEtfProperty = useCallback(
+    (property: keyof EtfConfig) => {
+      const map = new Map<string, number>();
+      for (const etf of etfs) {
+        if (etf.globalWeight > 0) {
+          const val = String(etf[property] || 'Unknown');
+          map.set(val, (map.get(val) || 0) + etf.globalWeight);
+        }
+      }
+      return Array.from(map.entries())
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
+    },
+    [etfs]
+  );
+
+  const providerData = useMemo(() => aggregateEtfProperty('issuer'), [aggregateEtfProperty]);
+  const replicationData = useMemo(
+    () => aggregateEtfProperty('replicationMethod'),
+    [aggregateEtfProperty]
+  );
+  const profitData = useMemo(() => aggregateEtfProperty('useOfProfit'), [aggregateEtfProperty]);
+  const domicileData = useMemo(() => aggregateEtfProperty('domicile'), [aggregateEtfProperty]);
+
+  const fundSizeData = useMemo(
+    () =>
+      etfs
+        .filter((e) => e.globalWeight > 0)
+        .map((e) => ({ name: e.name, value: e.fundSize || 0 }))
+        .sort((a, b) => b.value - a.value),
+    [etfs]
+  );
+  const fundAgeData = useMemo(
+    () =>
+      etfs
+        .filter((e) => e.globalWeight > 0)
+        .map((e) => ({ name: e.name, value: e.fundAge || 0 }))
+        .sort((a, b) => b.value - a.value),
+    [etfs]
+  );
 
   const concentrationData = useMemo(() => {
     const allHoldings = aggregateTopHoldings(etfs, 50);
@@ -115,24 +114,6 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
     );
   }
 
-  const CustomTooltip = ({
-    active,
-    payload,
-  }: {
-    active?: boolean;
-    payload?: { name: string; value: number }[];
-  }) => {
-    if (active && payload && payload.length) {
-      return (
-        <Card className="px-3 py-2 border-border shadow-lg rounded-lg text-sm border">
-          <p className="font-medium text-foreground">{payload[0].name}</p>
-          <p className="text-primary font-semibold">{payload[0].value.toFixed(2)}%</p>
-        </Card>
-      );
-    }
-    return null;
-  };
-
   return (
     <div className="space-y-4">
       {/* KPI Row */}
@@ -165,293 +146,81 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Top Holdings Bar Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <ChartTitleWithInfo
-              title="Top 10 Holdings"
-              info="The 10 largest individual companies you own across all your active ETFs, aggregated by their proportional weight."
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={topHoldings}
-                  layout="vertical"
-                  margin={{ top: 0, right: 30, left: 40, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
-                  <XAxis
-                    type="number"
-                    unit="%"
-                    stroke="var(--muted-foreground)"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    dataKey="name"
-                    type="category"
-                    width={150}
-                    stroke="var(--muted-foreground)"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)' }} />
-                  <Bar dataKey="value" fill="var(--primary)" radius={[0, 4, 4, 0]} barSize={28}>
-                    {topHoldings.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <TopHoldingsChart data={topHoldings} />
 
-        {/* Geographic Exposure */}
-        <Card>
-          <CardHeader>
-            <ChartTitleWithInfo
-              title="Geographic Exposure"
-              info="A breakdown of the physical country locations of the underlying companies in your portfolio."
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={geoData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={90}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {geoData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <PieChartCard
+          title="Geographic Exposure"
+          info="A breakdown of the physical country locations of the underlying companies in your portfolio."
+          data={geoData}
+        />
 
-        {/* Sector Exposure */}
-        <Card>
-          <CardHeader>
-            <ChartTitleWithInfo
-              title="Sector Exposure"
-              info="The industry breakdown (e.g., Technology, Healthcare) of the underlying companies in your portfolio."
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={sectorData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={90}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {sectorData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Currency Exposure */}
-        <Card>
-          <CardHeader>
-            <ChartTitleWithInfo
-              title="Currency Exposure"
-              info="Your risk exposure to different foreign exchange currencies based on the trading currency of your underlying assets."
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={currencyData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={90}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {currencyData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[(index + 4) % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <PieChartCard
+          title="Sector Exposure"
+          info="The industry breakdown (e.g., Technology, Healthcare) of the underlying companies in your portfolio."
+          data={sectorData}
+        />
 
-        {/* ETF Allocation */}
-        <Card>
-          <CardHeader>
-            <ChartTitleWithInfo
-              title="ETF Allocation"
-              info="A macro-level breakdown of the weights you assigned to each individual ETF in your portfolio."
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={etfAllocationData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={90}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {etfAllocationData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[(index + 6) % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-        {/* Portfolio Concentration */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <ChartTitleWithInfo
-              title="Portfolio Concentration (Top 50 Holdings)"
-              info="A cumulative sum of your top 50 holdings. Helps identify if your portfolio is top-heavy (e.g., your top 5 stocks making up 30% of your net worth)."
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
-                  data={concentrationData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis
-                    dataKey="name"
-                    stroke="var(--muted-foreground)"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    minTickGap={30}
-                  />
-                  <YAxis
-                    type="number"
-                    unit="%"
-                    stroke="var(--muted-foreground)"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    domain={[0, 'dataMax']}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend
-                    layout="horizontal"
-                    verticalAlign="bottom"
-                    align="center"
-                    wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke="var(--primary)"
-                    fill="var(--primary)"
-                    fillOpacity={0.2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <PieChartCard
+          title="Currency Exposure"
+          info="Your risk exposure to different foreign exchange currencies based on the trading currency of your underlying assets."
+          data={currencyData}
+          colorOffset={4}
+        />
 
-        {/* Weight Distribution */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <ChartTitleWithInfo
-              title="Holdings Weight Distribution"
-              info="Groups your underlying stocks by their individual size. Determines if you hold a few large positions vs thousands of tiny fractional positions."
-            />
-          </CardHeader>
-          <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={weightDistributionData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
-                  <XAxis
-                    dataKey="name"
-                    stroke="var(--muted-foreground)"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis
-                    type="number"
-                    unit="%"
-                    stroke="var(--muted-foreground)"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)' }} />
-                  <Bar dataKey="value" fill="var(--chart-2)" radius={[4, 4, 0, 0]} barSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <PieChartCard
+          title="ETF Allocation"
+          info="A macro-level breakdown of the weights you assigned to each individual ETF in your portfolio."
+          data={etfAllocationData}
+          colorOffset={6}
+        />
+
+        <PieChartCard
+          title="Provider Allocation"
+          info="A breakdown of the financial institutions that manage your ETFs (e.g., Vanguard, iShares)."
+          data={providerData}
+          colorOffset={2}
+        />
+
+        <PieChartCard
+          title="Replication Method"
+          info="How the ETFs track their indices: Physical (buying actual stocks) vs Synthetic (using derivatives)."
+          data={replicationData}
+          colorOffset={8}
+        />
+
+        <PieChartCard
+          title="Use of Profit"
+          info="Accumulating (reinvests dividends automatically) vs Distributing (pays dividends out to you)."
+          data={profitData}
+          colorOffset={3}
+        />
+
+        <PieChartCard
+          title="Fund Domicile"
+          info="The legal jurisdiction where your ETFs are registered (important for taxation)."
+          data={domicileData}
+          colorOffset={1}
+        />
+
+        <EtfBarChartCard
+          title="Fund Size"
+          info="Total Assets Under Management (AUM) for each ETF in your portfolio (in millions)."
+          data={fundSizeData}
+          unit="$M"
+          colorOffset={5}
+        />
+
+        <EtfBarChartCard
+          title="Fund Age"
+          info="The number of years since each ETF was launched."
+          data={fundAgeData}
+          unit="Years"
+          colorOffset={7}
+        />
+
+        <ConcentrationChart data={concentrationData} />
+
+        <DistributionChart data={weightDistributionData} />
       </div>
     </div>
   );

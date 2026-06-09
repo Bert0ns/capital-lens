@@ -8,6 +8,9 @@ export interface Holding {
 }
 
 export type Issuer = 'iShares' | 'Vanguard' | 'Amundi' | 'Lyxor';
+export type ReplicationMethod = 'Physical' | 'Synthetic' | 'Optimized';
+export type UseOfProfit = 'Accumulating' | 'Distributing';
+export type Domicile = 'Ireland' | 'Luxembourg' | 'US' | 'Other';
 
 export interface EtfConfig {
   id: string; // Unique ID for this ETF entry
@@ -16,6 +19,13 @@ export interface EtfConfig {
   ter: number;
   globalWeight: number; // 0 to 100
   holdings: Holding[]; // The parsed CSV data
+
+  // New ETF Metadata
+  replicationMethod: ReplicationMethod;
+  fundSize: number; // In millions (USD/EUR)
+  fundAge: number; // In years
+  useOfProfit: UseOfProfit;
+  domicile: Domicile;
 }
 
 export interface ParseResult {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { EtfConfig, Issuer } from '../lib/types';
+import { EtfConfig, Issuer, ReplicationMethod, UseOfProfit, Domicile } from '../lib/types';
 import { getCsvParser } from '../lib/parsers';
 import { toast } from 'sonner';
 
@@ -12,6 +12,11 @@ const DEFAULT_ETFS = [
     ter: 0.08,
     path: '/static/example_csv/vanguard-north-america.csv',
     weight: 25,
+    replicationMethod: 'Physical' as ReplicationMethod,
+    fundSize: 2613,
+    fundAge: 7,
+    useOfProfit: 'Accumulating' as UseOfProfit,
+    domicile: 'Ireland' as Domicile,
   },
   {
     name: 'Amundi Stoxx Europe 600',
@@ -19,6 +24,11 @@ const DEFAULT_ETFS = [
     ter: 0.07,
     path: '/static/example_csv/amundi-stoxx-europe-600.csv',
     weight: 30,
+    replicationMethod: 'Physical' as ReplicationMethod,
+    fundSize: 19220,
+    fundAge: 13,
+    useOfProfit: 'Accumulating' as UseOfProfit,
+    domicile: 'Luxembourg' as Domicile,
   },
   {
     name: 'Amundi Prime Japan',
@@ -26,6 +36,11 @@ const DEFAULT_ETFS = [
     ter: 0.05,
     path: '/static/example_csv/amundi-prime-japan.csv',
     weight: 5,
+    replicationMethod: 'Physical' as ReplicationMethod,
+    fundSize: 570,
+    fundAge: 6,
+    useOfProfit: 'Accumulating' as UseOfProfit,
+    domicile: 'Luxembourg' as Domicile,
   },
   {
     name: 'iShares MSCI EM',
@@ -33,6 +48,11 @@ const DEFAULT_ETFS = [
     ter: 0.18,
     path: '/static/example_csv/ishares-msci-em.csv',
     weight: 20,
+    replicationMethod: 'Physical' as ReplicationMethod,
+    fundSize: 36407,
+    fundAge: 12,
+    useOfProfit: 'Accumulating' as UseOfProfit,
+    domicile: 'Ireland' as Domicile,
   },
   {
     name: 'iShares MSCI Pacific ex-Japan',
@@ -40,6 +60,11 @@ const DEFAULT_ETFS = [
     ter: 0.2,
     path: '/static/example_csv/ishares-msci-pacific.csv',
     weight: 20,
+    replicationMethod: 'Physical' as ReplicationMethod,
+    fundSize: 3131,
+    fundAge: 16,
+    useOfProfit: 'Accumulating' as UseOfProfit,
+    domicile: 'Ireland' as Domicile,
   },
 ];
 
@@ -72,6 +97,11 @@ export function usePortfolio() {
               ter: def.ter,
               globalWeight: def.weight,
               holdings: result.holdings,
+              replicationMethod: def.replicationMethod,
+              fundSize: def.fundSize,
+              fundAge: def.fundAge,
+              useOfProfit: def.useOfProfit,
+              domicile: def.domicile,
             });
           }
         } catch (err) {
@@ -97,8 +127,22 @@ export function usePortfolio() {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
-          const parsed = JSON.parse(stored);
+          let parsed = JSON.parse(stored);
           if (parsed && parsed.length > 0) {
+            // Auto-migrate legacy data that is missing the new fields
+            parsed = parsed.map((etf: any) => {
+              const defaultMatch = DEFAULT_ETFS.find((d) => d.name === etf.name);
+              return {
+                ...etf,
+                replicationMethod:
+                  etf.replicationMethod || defaultMatch?.replicationMethod || 'Physical',
+                fundSize: etf.fundSize || defaultMatch?.fundSize || 0,
+                fundAge: etf.fundAge || defaultMatch?.fundAge || 0,
+                useOfProfit: etf.useOfProfit || defaultMatch?.useOfProfit || 'Accumulating',
+                domicile: etf.domicile || defaultMatch?.domicile || 'Ireland',
+              };
+            });
+
             setEtfs(parsed);
             setIsLoaded(true);
             return;

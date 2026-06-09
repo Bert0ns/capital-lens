@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Issuer, EtfConfig } from '../lib/types';
+import { Issuer, EtfConfig, ReplicationMethod, UseOfProfit, Domicile } from '../lib/types';
 import { getCsvParser } from '../lib/parsers';
 
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
@@ -29,13 +29,21 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
   const [name, setName] = useState('');
   const [issuer, setIssuer] = useState<Issuer>('iShares');
   const [ter, setTer] = useState('');
+
+  // New Fields
+  const [replicationMethod, setReplicationMethod] = useState<ReplicationMethod>('Physical');
+  const [fundSize, setFundSize] = useState('');
+  const [fundAge, setFundAge] = useState('');
+  const [useOfProfit, setUseOfProfit] = useState<UseOfProfit>('Accumulating');
+  const [domicile, setDomicile] = useState<Domicile>('Ireland');
+
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !ter || !file) {
+    if (!name || !ter || !file || !fundSize || !fundAge) {
       toast.error('Missing fields', {
         description: 'Please fill all fields and upload a CSV file.',
       });
@@ -43,8 +51,19 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
     }
 
     const terNumber = parseFloat(ter);
+    const sizeNumber = parseFloat(fundSize);
+    const ageNumber = parseFloat(fundAge);
+
     if (isNaN(terNumber) || terNumber < 0) {
-      toast.error('Invalid TER', { description: 'Please enter a valid TER (e.g., 0.22)' });
+      toast.error('Invalid TER', { description: 'Please enter a valid TER.' });
+      return;
+    }
+    if (isNaN(sizeNumber) || sizeNumber < 0) {
+      toast.error('Invalid Fund Size', { description: 'Please enter a valid Fund Size.' });
+      return;
+    }
+    if (isNaN(ageNumber) || ageNumber < 0) {
+      toast.error('Invalid Fund Age', { description: 'Please enter a valid Fund Age.' });
       return;
     }
 
@@ -75,6 +94,11 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
         ter: terNumber,
         globalWeight: 0,
         holdings: result.holdings,
+        replicationMethod,
+        fundSize: sizeNumber,
+        fundAge: ageNumber,
+        useOfProfit,
+        domicile,
       };
 
       onAddEtf(newEtf);
@@ -82,6 +106,8 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
       // Reset form
       setName('');
       setTer('');
+      setFundSize('');
+      setFundAge('');
       setFile(null);
       setOpen(false); // Close dialog on success
 
@@ -106,7 +132,7 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
       >
         <Plus size={20} /> Add New ETF
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New ETF</DialogTitle>
           <DialogDescription>
@@ -127,10 +153,10 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Issuer</Label>
+              <Label>Provider</Label>
               <Select value={issuer} onValueChange={(val) => setIssuer(val as Issuer)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Issuer" />
+                  <SelectValue placeholder="Select Provider" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="iShares">iShares</SelectItem>
@@ -151,6 +177,78 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
                 placeholder="e.g., 0.22"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Replication Method</Label>
+              <Select
+                value={replicationMethod}
+                onValueChange={(val) => setReplicationMethod(val as ReplicationMethod)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Physical">Physical</SelectItem>
+                  <SelectItem value="Synthetic">Synthetic</SelectItem>
+                  <SelectItem value="Optimized">Optimized</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Use of Profit</Label>
+              <Select
+                value={useOfProfit}
+                onValueChange={(val) => setUseOfProfit(val as UseOfProfit)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Accumulating">Accumulating</SelectItem>
+                  <SelectItem value="Distributing">Distributing</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="fundSize">Fund Size ($M)</Label>
+              <Input
+                id="fundSize"
+                type="number"
+                value={fundSize}
+                onChange={(e) => setFundSize(e.target.value)}
+                placeholder="e.g., 5000"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fundAge">Fund Age (Years)</Label>
+              <Input
+                id="fundAge"
+                type="number"
+                value={fundAge}
+                onChange={(e) => setFundAge(e.target.value)}
+                placeholder="e.g., 5"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Domicile</Label>
+            <Select value={domicile} onValueChange={(val) => setDomicile(val as Domicile)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Ireland">Ireland</SelectItem>
+                <SelectItem value="Luxembourg">Luxembourg</SelectItem>
+                <SelectItem value="US">US</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
