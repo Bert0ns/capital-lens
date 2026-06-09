@@ -1,7 +1,12 @@
 'use client';
 
+import React from 'react';
 import { EtfConfig } from '../lib/types';
 import { Trash2, RotateCcw } from 'lucide-react';
+
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Slider } from './ui/slider';
+import { Button } from './ui/button';
 
 interface PortfolioSlidersProps {
   etfs: EtfConfig[];
@@ -9,6 +14,68 @@ interface PortfolioSlidersProps {
   onUpdateWeight: (id: string, weight: number) => void;
   onRemove: (id: string) => void;
   onReset: () => void;
+}
+
+function EtfSliderRow({
+  etf,
+  onUpdateWeight,
+  onRemove,
+}: {
+  etf: EtfConfig;
+  onUpdateWeight: any;
+  onRemove: any;
+}) {
+  const [localWeight, setLocalWeight] = React.useState(Math.round(etf.globalWeight || 0));
+
+  // Sync from parent if it changes externally (e.g., Reset Defaults)
+  React.useEffect(() => {
+    setLocalWeight(Math.round(etf.globalWeight || 0));
+  }, [etf.globalWeight]);
+
+  // Sync to parent with a debounce to prevent React infinite update loops
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      onUpdateWeight(etf.id, localWeight);
+    }, 50);
+    return () => clearTimeout(handler);
+  }, [localWeight, etf.id, onUpdateWeight]);
+
+  const sliderValue = React.useMemo(() => [localWeight], [localWeight]);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-between items-start">
+        <div>
+          <h3 className="font-medium text-sm text-foreground">{etf.name}</h3>
+          <p className="text-xs text-muted-foreground">
+            {etf.issuer} • TER: {etf.ter}%
+          </p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <span className="font-semibold text-sm w-12 text-right">{localWeight}%</span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onRemove(etf.id)}
+            className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            title="Remove ETF"
+          >
+            <Trash2 size={16} />
+          </Button>
+        </div>
+      </div>
+      <Slider
+        value={sliderValue}
+        max={100}
+        step={1}
+        onValueChange={(val) => {
+          const newWeight = Array.isArray(val) ? val[0] : val;
+          setLocalWeight(Math.round(newWeight ?? 0));
+        }}
+        className="py-2"
+      />
+    </div>
+  );
 }
 
 export default function PortfolioSliders({
@@ -20,17 +87,18 @@ export default function PortfolioSliders({
 }: PortfolioSlidersProps) {
   if (etfs.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center h-full text-gray-500 min-h-[300px]">
-        <p className="font-medium text-gray-700">No ETFs added yet.</p>
-        <p className="text-sm mt-1">Upload a CSV to start building your portfolio.</p>
-        <button
-          onClick={onReset}
-          className="mt-6 flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors font-medium text-sm"
-        >
-          <RotateCcw size={16} />
-          <span>Load Default Portfolio</span>
-        </button>
-      </div>
+      <Card className="h-full flex flex-col items-center justify-center text-center min-h-[300px] border-dashed">
+        <CardContent className="pt-6">
+          <p className="font-medium text-muted-foreground">No ETFs added yet.</p>
+          <p className="text-sm mt-1 text-muted-foreground/80">
+            Upload a CSV to start building your portfolio.
+          </p>
+          <Button onClick={onReset} variant="outline" className="mt-6 flex items-center gap-2">
+            <RotateCcw size={16} />
+            Load Default Portfolio
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -38,77 +106,59 @@ export default function PortfolioSliders({
   const isUnderweight = totalWeight < 100;
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col min-h-[300px]">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">Portfolio Weights</h2>
-        <button
-          onClick={onReset}
-          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-          title="Reset to defaults"
-        >
-          <RotateCcw size={18} />
-        </button>
-      </div>
+    <Card className="h-full flex flex-col min-h-[300px]">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle>Portfolio Weights</CardTitle>
+        <Button variant="ghost" size="icon" onClick={onReset} title="Reset to defaults">
+          <RotateCcw size={18} className="text-muted-foreground" />
+        </Button>
+      </CardHeader>
 
-      <div className="flex-1 overflow-y-auto space-y-6 pr-2">
-        {etfs.map((etf) => (
-          <div key={etf.id} className="group relative">
-            <div className="flex justify-between items-center mb-2">
-              <div className="pr-12">
-                <h3 className="font-medium text-gray-800 truncate">{etf.name}</h3>
-                <p className="text-xs text-gray-500">
-                  {etf.issuer} • {etf.ter}% TER
-                </p>
-              </div>
-              <div className="flex items-center space-x-2 absolute right-0 top-0">
-                <span className="font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded text-sm">
-                  {etf.globalWeight}%
-                </span>
-                <button
-                  onClick={() => onRemove(etf.id)}
-                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100"
-                  title="Remove ETF"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={etf.globalWeight}
-              onChange={(e) => onUpdateWeight(etf.id, parseInt(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+      <CardContent className="flex-1 flex flex-col pt-0 space-y-6">
+        <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+          {etfs.map((etf) => (
+            <EtfSliderRow
+              key={etf.id}
+              etf={etf}
+              onUpdateWeight={onUpdateWeight}
+              onRemove={onRemove}
+            />
+          ))}
+        </div>
+
+        {/* Total Weight Validation */}
+        <div className="pt-6 mt-auto border-t">
+          <div className="flex justify-between items-end mb-2">
+            <span className="text-sm font-medium text-muted-foreground">Total Allocation</span>
+            <span
+              className={`text-2xl font-bold ${
+                isOverweight
+                  ? 'text-destructive'
+                  : isUnderweight
+                    ? 'text-amber-500'
+                    : 'text-emerald-600'
+              }`}
+            >
+              {totalWeight.toFixed(1)}%
+            </span>
+          </div>
+
+          <div className="h-2 w-full bg-secondary rounded-full overflow-hidden flex">
+            <div
+              className={`h-full transition-all duration-300 ${
+                isOverweight ? 'bg-destructive' : isUnderweight ? 'bg-amber-400' : 'bg-emerald-500'
+              }`}
+              style={{ width: `${Math.min(totalWeight, 100)}%` }}
             />
           </div>
-        ))}
-      </div>
 
-      <div className="mt-6 pt-6 border-t border-gray-100">
-        <div className="flex justify-between items-end mb-2">
-          <span className="text-sm font-medium text-gray-600">Total Allocation</span>
-          <span
-            className={`text-2xl font-bold ${isOverweight ? 'text-red-500' : isUnderweight ? 'text-amber-500' : 'text-emerald-500'}`}
-          >
-            {totalWeight}%
-          </span>
+          <div className="mt-2 text-xs text-center text-muted-foreground min-h-[16px]">
+            {isOverweight && 'Your portfolio exceeds 100%. Please reduce some weights.'}
+            {isUnderweight && `You have ${(100 - totalWeight).toFixed(1)}% left to allocate.`}
+            {!isOverweight && !isUnderweight && 'Perfectly allocated.'}
+          </div>
         </div>
-        <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all duration-300 ${isOverweight ? 'bg-red-500' : isUnderweight ? 'bg-amber-500' : 'bg-emerald-500'}`}
-            style={{ width: `${Math.min(totalWeight, 100)}%` }}
-          />
-        </div>
-        {isOverweight && (
-          <p className="text-red-500 text-xs mt-2 font-medium">Total weight exceeds 100%!</p>
-        )}
-        {isUnderweight && (
-          <p className="text-amber-500 text-xs mt-2 font-medium">
-            Allocate {100 - totalWeight}% more to reach 100%
-          </p>
-        )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

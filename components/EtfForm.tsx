@@ -4,6 +4,12 @@ import { useState } from 'react';
 import { Issuer, EtfConfig } from '../lib/types';
 import { getCsvParser } from '../lib/parsers';
 
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Button } from './ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+
 interface EtfFormProps {
   onAddEtf: (etf: EtfConfig) => void;
 }
@@ -54,7 +60,7 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
         name,
         issuer,
         ter: terNumber,
-        globalWeight: 0, // Starts at 0, user adjusts later
+        globalWeight: 0,
         holdings: result.holdings,
       };
 
@@ -72,71 +78,73 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800">Add New ETF</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">ETF Name / Ticker</label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., S&P 500 Information Technology"
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Issuer</label>
-            <select
-              value={issuer}
-              onChange={(e) => setIssuer(e.target.value as Issuer)}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
-            >
-              <option value="iShares">iShares</option>
-              <option value="Vanguard">Vanguard</option>
-              <option value="Amundi">Amundi</option>
-              <option value="Lyxor">Lyxor</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">TER (%)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={ter}
-              onChange={(e) => setTer(e.target.value)}
-              placeholder="e.g., 0.22"
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+    <Card>
+      <CardHeader>
+        <CardTitle>Add New ETF</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="etf-name">ETF Name / Ticker</Label>
+            <Input
+              id="etf-name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., S&P 500 Information Technology"
             />
           </div>
-        </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Holdings CSV File</label>
-          <input
-            type="file"
-            accept=".csv"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
-            className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer"
-          />
-        </div>
-
-        {error && (
-          <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-100">
-            {error}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Issuer</Label>
+              <Select value={issuer} onValueChange={(val) => setIssuer(val as Issuer)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Issuer" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="iShares">iShares</SelectItem>
+                  <SelectItem value="Vanguard">Vanguard</SelectItem>
+                  <SelectItem value="Amundi">Amundi</SelectItem>
+                  <SelectItem value="Lyxor">Lyxor</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ter">TER (%)</Label>
+              <Input
+                id="ter"
+                type="number"
+                step="0.01"
+                value={ter}
+                onChange={(e) => setTer(e.target.value)}
+                placeholder="e.g., 0.22"
+              />
+            </div>
           </div>
-        )}
 
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50"
-        >
-          {isLoading ? 'Processing...' : 'Add ETF'}
-        </button>
-      </form>
-    </div>
+          <div className="space-y-2">
+            <Label htmlFor="csv-file">Holdings CSV File</Label>
+            <Input
+              id="csv-file"
+              type="file"
+              accept=".csv"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              className="cursor-pointer file:text-primary file:font-semibold"
+            />
+          </div>
+
+          {error && (
+            <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/20">
+              {error}
+            </div>
+          )}
+
+          <Button type="submit" disabled={isLoading} className="w-full">
+            {isLoading ? 'Processing...' : 'Add ETF'}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }

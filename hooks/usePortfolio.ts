@@ -124,7 +124,11 @@ export function usePortfolio() {
   }, []);
 
   const updateEtfWeight = useCallback((id: string, weight: number) => {
-    setEtfs((prev) => prev.map((etf) => (etf.id === id ? { ...etf, globalWeight: weight } : etf)));
+    setEtfs((prev) => {
+      const etf = prev.find((e) => e.id === id);
+      if (!etf || etf.globalWeight === weight) return prev;
+      return prev.map((e) => (e.id === id ? { ...e, globalWeight: weight } : e));
+    });
   }, []);
 
   const totalWeight = etfs.reduce((sum, etf) => sum + etf.globalWeight, 0);

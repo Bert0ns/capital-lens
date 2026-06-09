@@ -15,6 +15,7 @@ import {
   YAxis,
   CartesianGrid,
 } from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 interface DashboardProps {
   etfs: EtfConfig[];
@@ -43,20 +44,22 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
 
   if (etfs.length === 0 || totalWeight === 0) {
     return (
-      <div className="bg-white p-12 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center text-gray-500 min-h-[400px] h-full">
-        <h3 className="text-xl font-medium text-gray-700 mb-2">No Data to Display</h3>
-        <p>Add ETFs and allocate weight to see your portfolio analysis.</p>
-      </div>
+      <Card className="flex flex-col items-center justify-center text-center text-muted-foreground min-h-[400px] h-full border-dashed">
+        <CardContent className="pt-6">
+          <h3 className="text-xl font-medium text-foreground mb-2">No Data to Display</h3>
+          <p>Add ETFs and allocate weight to see your portfolio analysis.</p>
+        </CardContent>
+      </Card>
     );
   }
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white px-3 py-2 border border-gray-100 shadow-lg rounded-lg text-sm">
-          <p className="font-medium text-gray-800">{payload[0].name}</p>
-          <p className="text-blue-600 font-semibold">{payload[0].value.toFixed(2)}%</p>
-        </div>
+        <Card className="px-3 py-2 border-border shadow-lg rounded-lg text-sm border">
+          <p className="font-medium text-foreground">{payload[0].name}</p>
+          <p className="text-primary font-semibold">{payload[0].value.toFixed(2)}%</p>
+        </Card>
       );
     }
     return null;
@@ -66,114 +69,134 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
     <div className="space-y-6">
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
-          <h3 className="text-sm font-medium text-gray-500 mb-1">Weighted Avg TER</h3>
-          <p className="text-3xl font-bold text-gray-800">{avgTer.toFixed(2)}%</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
-          <h3 className="text-sm font-medium text-gray-500 mb-1">Total Assets Analyzed</h3>
-          <p className="text-3xl font-bold text-gray-800">
-            {etfs.reduce((sum, etf) => sum + etf.holdings.length, 0).toLocaleString()}
-          </p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
-          <h3 className="text-sm font-medium text-gray-500 mb-1">Active ETFs</h3>
-          <p className="text-3xl font-bold text-gray-800">
-            {etfs.filter((e) => e.globalWeight > 0).length}
-          </p>
-        </div>
+        <Card>
+          <CardContent className="pt-6 flex flex-col justify-center">
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Weighted Avg TER</h3>
+            <p className="text-3xl font-bold text-foreground">{avgTer.toFixed(2)}%</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 flex flex-col justify-center">
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">
+              Total Assets Analyzed
+            </h3>
+            <p className="text-3xl font-bold text-foreground">
+              {etfs.reduce((sum, etf) => sum + etf.holdings.length, 0).toLocaleString()}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6 flex flex-col justify-center">
+            <h3 className="text-sm font-medium text-muted-foreground mb-1">Active ETFs</h3>
+            <p className="text-3xl font-bold text-foreground">
+              {etfs.filter((e) => e.globalWeight > 0).length}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Holdings Bar Chart */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 lg:col-span-2">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Top 10 Holdings</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={topHoldings}
-                layout="vertical"
-                margin={{ top: 0, right: 30, left: 40, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                <XAxis
-                  type="number"
-                  unit="%"
-                  stroke="#94a3b8"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  width={150}
-                  stroke="#64748b"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={28}>
-                  {topHoldings.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Top 10 Holdings</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={topHoldings}
+                  layout="vertical"
+                  margin={{ top: 0, right: 30, left: 40, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="var(--border)" />
+                  <XAxis
+                    type="number"
+                    unit="%"
+                    stroke="var(--muted-foreground)"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={150}
+                    stroke="var(--muted-foreground)"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--muted)' }} />
+                  <Bar dataKey="value" fill="var(--primary)" radius={[0, 4, 4, 0]} barSize={28}>
+                    {topHoldings.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Geographic Exposure */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Geographic Exposure</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={geoData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={90}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {geoData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Geographic Exposure</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={geoData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {geoData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Sector Exposure */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-6">Sector Exposure</h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={sectorData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={70}
-                  outerRadius={90}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {sectorData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Sector Exposure</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={sectorData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={70}
+                    outerRadius={90}
+                    paddingAngle={2}
+                    dataKey="value"
+                  >
+                    {sectorData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
