@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ETF Portfolio Analyzer & Dashboard
 
-## Getting Started
+## 1. Project Overview
 
-First, run the development server:
+The goal is to develop an interactive web application, running entirely client-side, for the analysis and visualization of a custom ETF portfolio. The app will allow the user to upload official CSV files from issuers (iShares, Vanguard, Amundi, Lyxor, etc.), assign custom weights to each ETF, and view aggregated metrics in real-time.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 2. Tech Stack
+
+- **Framework:** Next.js (React)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Charts Library:** Recharts (or Chart.js)
+- **CSV Parsing:** PapaParse
+- **Storage:** LocalStorage (no database or backend required)
+
+## 3. Architecture (Client-Side "All-in-One")
+
+The architecture must be 100% serverless/client-side. CSV processing will happen entirely in the user's browser.
+
+1.  The user uploads CSV files and enters metadata.
+2.  The files are parsed in memory and normalized into a standard data structure via PapaParse.
+3.  The normalized data and portfolio configuration are saved in the browser's `localStorage`.
+4.  The interface reads from state and renders charts, reacting reactively to weight changes (sliders).
+
+## 4. Core Functional Requirements
+
+### 4.1. ETF Management (Upload & Ingestion)
+
+The user must be able to add new ETFs via a form containing:
+
+- **ETF Name / Ticker** (Text).
+- **Issuer** (Dropdown: iShares, Vanguard, Amundi, Lyxor). _Crucial for directing the correct parsing logic for the CSV structure._
+- **TER (Total Expense Ratio)** (Numeric input, e.g., 0.22).
+- **File Upload** (Selection of the holdings CSV file).
+
+### 4.2. Data Normalization (Parsing)
+
+Issuer CSVs vary in structure and nomenclature. The parser must extract and map data to a common TypeScript interface:
+
+```typescript
+interface Holding {
+  ticker: string;
+  name: string;
+  weight: number; // Weight of the company within the single ETF (%)
+  sector: string;
+  country: string;
+  currency: string;
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 4.3. Dashboard and Interactive Controls
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Global Weight Slider:** Each entered ETF will have a slider (from 0% to 100%) to define its weight within the overall portfolio.
+- **Validation Control:** The UI must clearly show if the sum of all ETF weights reaches 100%. If not, it must warn the user (e.g., red/green progress bar).
+- **Reactivity:** Modifying a slider must trigger immediate recalculation of exposures via `useMemo` or `useEffect`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4.4. Visualizations and Charts
 
-## Learn More
+The dashboard must show the following aggregations, calculated by multiplying the individual company's weight by the ETF's global weight in the portfolio:
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Geographic Exposure:** Pie or bar chart (Top aggregated Countries).
+2. **Sector Exposure:** Pie or bar chart.
+3. **Currency Exposure:** Pie chart (Euro, USD, Yen, etc.).
+4. **Total Portfolio Cost (Weighted Average TER):** A highlighted Card/KPI.
+5. **Top 10 Companies:** Table or horizontal bar chart. Must correctly aggregate companies present in multiple ETFs (e.g., crossing Apple from an S&P500 ETF and an MSCI World ETF by summing their weights).
