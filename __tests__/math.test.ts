@@ -204,7 +204,7 @@ describe('Math Utilities', () => {
             ...mockEtfs[0],
             globalWeight: 100,
             holdings: [
-              // @ts-ignore - explicitly testing missing properties
+              // @ts-expect-error - explicitly testing missing properties
               { name: 'A', ticker: 'A', weight: 10 },
             ],
           },

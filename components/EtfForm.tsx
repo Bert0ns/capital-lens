@@ -270,9 +270,9 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
               <strong className="block mb-1 text-blue-900 dark:text-blue-200">
                 How to get the CSV file:
               </strong>
-              Go to the ETF issuer's official website (e.g., iShares, Vanguard, Amundi), search for
-              your ETF, and find the section containing the holdings/participations. Download the
-              list as a <strong>CSV (UTF-8)</strong>. <br />
+              Go to the ETF issuer&apos;s official website (e.g., iShares, Vanguard, Amundi), search
+              for your ETF, and find the section containing the holdings/participations. Download
+              the list as a <strong>CSV (UTF-8)</strong>. <br />
               <span className="text-red-700 dark:text-red-400 font-semibold mt-1 block">
                 ⚠️ Do not edit or open the file in Excel before uploading! Just upload it directly
                 as downloaded.

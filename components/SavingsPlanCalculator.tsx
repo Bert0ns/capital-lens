@@ -127,7 +127,7 @@ export function SavingsPlanCalculator({ etfs, totalWeight }: SavingsPlanCalculat
                       dx={-10}
                     />
                     <Tooltip
-                      formatter={(value: any) => formatCurrency(Number(value) || 0)}
+                      formatter={(value: number | string) => formatCurrency(Number(value) || 0)}
                       labelFormatter={(label) => `Year ${label}`}
                       contentStyle={{
                         borderRadius: '12px',
@@ -161,7 +161,7 @@ export function SavingsPlanCalculator({ etfs, totalWeight }: SavingsPlanCalculat
 
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle>Next Month's Buying Plan</CardTitle>
+              <CardTitle>Next Month&apos;s Buying Plan</CardTitle>
             </CardHeader>
             <CardContent>
               {totalWeight === 0 ? (

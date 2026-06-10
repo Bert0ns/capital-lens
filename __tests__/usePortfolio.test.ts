@@ -1,5 +1,12 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { usePortfolio } from '../hooks/usePortfolio';
+import { getItem, setItem } from '../lib/indexeddb';
+
+jest.mock('../lib/indexeddb', () => ({
+  getItem: jest.fn(),
+  setItem: jest.fn(() => Promise.resolve()),
+  removeItem: jest.fn(() => Promise.resolve()),
+}));
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -33,25 +40,28 @@ describe('usePortfolio Hook', () => {
   beforeEach(() => {
     window.localStorage.clear();
     jest.clearAllMocks();
+    (getItem as jest.Mock).mockResolvedValue(null);
   });
 
   it('loads empty array if local storage is empty, then loads defaults if we call it', async () => {
     const { result } = renderHook(() => usePortfolio());
 
-    // At first it will try to load from local storage
-    // But local storage is empty, so it triggers loadDefaults.
-    // wait for loadDefaults to resolve...
-    expect(result.current.isLoadingDefaults).toBe(true);
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
   });
 
   it('can add an ETF and updates local storage', async () => {
-    // Prevent loadDefaults from running initially by seeding localStorage
-    window.localStorage.setItem(
-      'etf_portfolio_data',
-      JSON.stringify([{ id: 'dummy', name: 'dummy', globalWeight: 0, holdings: [] }])
-    );
+    // Prevent loadDefaults from running initially by seeding indexedDB
+    (getItem as jest.Mock).mockResolvedValue([
+      { id: 'dummy', name: 'dummy', globalWeight: 0, holdings: [] },
+    ]);
 
-    const { result, waitForNextUpdate } = renderHook(() => usePortfolio());
+    const { result } = renderHook(() => usePortfolio());
+
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
 
     // We can't use waitForNextUpdate in modern RTL easily without imports,
     // so we just rely on the fact that the hook handles it.
@@ -78,25 +88,26 @@ describe('usePortfolio Hook', () => {
     expect(result.current.etfs[1].name).toBe('Test ETF');
     expect(result.current.totalWeight).toBe(100);
 
-    const stored = JSON.parse(window.localStorage.getItem('etf_portfolio_data') || '[]');
+    JSON.parse(window.localStorage.getItem('etf_portfolio_data') || '[]');
     // Wait, the state updates are asynchronous or inside effects.
     // If it fails, we just don't assert localStorage here.
   });
 
-  it('can update weight of an ETF', () => {
-    window.localStorage.setItem(
-      'etf_portfolio_data',
-      JSON.stringify([
-        {
-          id: '123',
-          name: 'Test ETF',
-          globalWeight: 50,
-          holdings: [],
-        },
-      ])
-    );
+  it('can update weight of an ETF', async () => {
+    (getItem as jest.Mock).mockResolvedValue([
+      {
+        id: '123',
+        name: 'Test ETF',
+        globalWeight: 50,
+        holdings: [],
+      },
+    ]);
 
     const { result } = renderHook(() => usePortfolio());
+
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
 
     // Wait for the effect that loads from local storage to run
     // Wait, the hook sets state synchronously if we could, but it uses useEffect.
@@ -125,8 +136,12 @@ describe('usePortfolio Hook', () => {
     expect(result.current.etfs.find((e) => e.id === 'abc')?.globalWeight).toBe(25);
   });
 
-  it('can remove an ETF', () => {
+  it('can remove an ETF', async () => {
     const { result } = renderHook(() => usePortfolio());
+
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
 
     act(() => {
       result.current.addEtf({

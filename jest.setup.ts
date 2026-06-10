@@ -28,7 +28,7 @@ jest.mock('recharts', () => {
   const OriginalModule = jest.requireActual('recharts');
   return {
     ...OriginalModule,
-    ResponsiveContainer: ({ children }: any) =>
+    ResponsiveContainer: ({ children }: { children: React.ReactNode }) =>
       React.createElement(
         OriginalModule.ResponsiveContainer,
         { width: 800, height: 800 },

@@ -3,7 +3,6 @@ import {
   VanguardParser,
   AmundiParser,
   LyxorParser,
-  BaseParser,
 } from '../lib/parsers/strategies';
 
 describe('CSV Parsing Strategies', () => {

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { EtfConfig, Issuer, ReplicationMethod, UseOfProfit, Domicile } from '../lib/types';
 import { getCsvParser } from '../lib/parsers';
 import { toast } from 'sonner';
+import { getItem, setItem, removeItem } from '../lib/indexeddb';
 
 const STORAGE_KEY = 'etf_portfolio_data';
 
@@ -127,37 +128,46 @@ export function usePortfolio() {
     }
   }, []);
 
-  // Load from local storage or defaults on mount
+  // Load from indexedDB or fallback to local storage or defaults on mount
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          let parsed = JSON.parse(stored);
-          if (parsed && parsed.length > 0) {
-            // Auto-migrate legacy data that is missing the new fields
-            parsed = parsed.map((etf: unknown) => {
-              const typedEtf = etf as Partial<EtfConfig>;
-              const defaultMatch = DEFAULT_ETFS.find((d) => d.name === typedEtf.name);
-              return {
-                ...typedEtf,
-                isin: typedEtf.isin || defaultMatch?.isin || '',
-                replicationMethod:
-                  typedEtf.replicationMethod || defaultMatch?.replicationMethod || 'Physical',
-                fundSize: typedEtf.fundSize || defaultMatch?.fundSize || 0,
-                fundAge: typedEtf.fundAge || defaultMatch?.fundAge || 0,
-                useOfProfit: typedEtf.useOfProfit || defaultMatch?.useOfProfit || 'Accumulating',
-                domicile: typedEtf.domicile || defaultMatch?.domicile || 'Ireland',
-              };
-            });
+        let parsed = await getItem<EtfConfig[]>(STORAGE_KEY);
 
-            setEtfs(parsed as EtfConfig[]);
-            setIsLoaded(true);
-            return;
+        // Migrate from localStorage if indexedDB is empty
+        if (!parsed) {
+          const ls = localStorage.getItem(STORAGE_KEY);
+          if (ls) {
+            try {
+              parsed = JSON.parse(ls);
+              localStorage.removeItem(STORAGE_KEY);
+            } catch (e) {}
           }
         }
+
+        if (parsed && Array.isArray(parsed) && parsed.length > 0) {
+          // Auto-migrate legacy data that is missing the new fields
+          parsed = parsed.map((etf: unknown) => {
+            const typedEtf = etf as Partial<EtfConfig>;
+            const defaultMatch = DEFAULT_ETFS.find((d) => d.name === typedEtf.name);
+            return {
+              ...typedEtf,
+              isin: typedEtf.isin || defaultMatch?.isin || '',
+              replicationMethod:
+                typedEtf.replicationMethod || defaultMatch?.replicationMethod || 'Physical',
+              fundSize: typedEtf.fundSize || defaultMatch?.fundSize || 0,
+              fundAge: typedEtf.fundAge || defaultMatch?.fundAge || 0,
+              useOfProfit: typedEtf.useOfProfit || defaultMatch?.useOfProfit || 'Accumulating',
+              domicile: typedEtf.domicile || defaultMatch?.domicile || 'Ireland',
+            };
+          });
+
+          setEtfs(parsed as EtfConfig[]);
+          setIsLoaded(true);
+          return;
+        }
       } catch (e) {
-        console.error('Failed to load portfolio from local storage', e);
+        console.error('Failed to load portfolio from storage', e);
         toast.error('Storage Error', {
           description: 'Failed to restore portfolio from local storage.',
         });
@@ -170,10 +180,10 @@ export function usePortfolio() {
     loadInitialData();
   }, [loadDefaults]);
 
-  // Save to local storage whenever etfs change
+  // Save to indexedDB whenever etfs change
   useEffect(() => {
     if (isLoaded && !isLoadingDefaults) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(etfs));
+      setItem(STORAGE_KEY, etfs).catch((e) => console.error('Failed to save to IndexedDB', e));
     }
   }, [etfs, isLoaded, isLoadingDefaults]);
 
