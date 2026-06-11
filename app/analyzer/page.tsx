@@ -31,21 +31,6 @@ export default function Analyzer() {
   return (
     <main className="min-h-[calc(100vh-4rem)] bg-background p-6 md:p-10 font-sans text-foreground w-full">
       <div className="max-w-7xl mx-auto space-y-8 w-full">
-        <header className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-6">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-widest uppercase text-white">
-              Analyzer{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
-                Workspace
-              </span>
-            </h1>
-            <p className="text-slate-400 mt-2 font-light tracking-wide">
-              Upload your ETF holdings CSVs, configure weights, and analyze your true underlying
-              exposure.
-            </p>
-          </div>
-        </header>
-
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           <div className="xl:col-span-1 relative">
             <div className="xl:sticky xl:top-24 space-y-8 xl:max-h-[calc(100vh-6rem)] flex flex-col">

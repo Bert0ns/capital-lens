@@ -17,14 +17,14 @@ export default function Navbar() {
           <div className="flex items-center gap-3 relative z-10">
             <img
               src="/logo.svg"
-              alt="ETF Analyzer"
+              alt="Portfolio Analyzer"
               className="w-8 h-8 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]"
             />
-            <Link
-              href="/"
-              className="font-black text-xl text-white tracking-widest uppercase hidden sm:block"
-            >
-              ETF Analyzer
+            <Link href="/" className="font-black text-xl tracking-widest uppercase hidden sm:block">
+              <span className="text-white">Portfolio</span>{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+                Analyzer
+              </span>
             </Link>
           </div>
 
@@ -34,7 +34,7 @@ export default function Navbar() {
               href="/analyzer"
               className="text-sm font-medium text-slate-300 hover:text-primary transition-colors uppercase tracking-widest whitespace-nowrap"
             >
-              Portfolio Analyzer
+              Dashboard
             </Link>
             <Link
               href="/about"
@@ -68,11 +68,14 @@ export default function Navbar() {
                 <div className="flex flex-col items-center justify-center gap-4 mb-8 border-b border-white/10 pb-8 mt-10">
                   <img
                     src="/logo.svg"
-                    alt="ETF Analyzer Logo"
+                    alt="Portfolio Analyzer Logo"
                     className="w-16 h-16 drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]"
                   />
-                  <span className="font-black text-2xl text-white uppercase tracking-widest text-center">
-                    ETF Analyzer
+                  <span className="font-black text-2xl uppercase tracking-widest text-center">
+                    <span className="text-white">Portfolio</span>{' '}
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
+                      Analyzer
+                    </span>
                   </span>
                 </div>
 
@@ -82,7 +85,7 @@ export default function Navbar() {
                     className="flex items-center gap-4 px-4 py-4 rounded-none border border-transparent text-base font-medium text-slate-300 hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all uppercase tracking-wider"
                   >
                     <LayoutDashboard className="h-5 w-5" />
-                    Portfolio Analyzer
+                    Dashboard
                   </Link>
                   <Link
                     href="/about"
