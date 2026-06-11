@@ -35,25 +35,25 @@ export default function AnalyzerContent() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-background p-3 md:p-10 font-sans text-foreground w-full">
+    <main className="min-h-[calc(100vh-4rem)] bg-background p-3 md:p-6 lg:p-8 font-sans text-foreground w-full">
       <div className="max-w-7xl mx-auto space-y-8 w-full">
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 transition-all duration-500 ease-in-out">
           <div
             className={`transition-all duration-500 ease-in-out ${isSlidersOpen ? 'xl:col-span-4' : 'xl:col-span-12'}`}
           >
             <div
-              className={`${isSlidersOpen ? 'xl:sticky xl:top-24 xl:h-[calc(100vh-6rem)]' : ''} flex flex-col`}
+              className={`${isSlidersOpen ? 'xl:sticky xl:top-20 xl:h-[calc(100vh-5rem)]' : ''} flex flex-col`}
             >
               <button
                 onClick={() => setIsSlidersOpen(!isSlidersOpen)}
-                className="flex-shrink-0 flex items-center justify-between w-full py-3 px-4 text-sm font-semibold text-foreground bg-muted/30 border border-border rounded-xl hover:bg-muted/60 transition-colors cursor-pointer"
+                className="shrink-0 flex items-center justify-between w-full mb-0 py-3 px-4 text-sm font-semibold text-foreground bg-muted/30 border border-border rounded-xl hover:bg-muted/60 transition-colors cursor-pointer"
               >
                 <span>{isSlidersOpen ? 'Hide Portfolio Setup' : 'Manage Portfolio'}</span>
                 {isSlidersOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
               </button>
 
               {isSlidersOpen && (
-                <div className="flex-1 min-h-0 mt-8 flex flex-col animate-in fade-in slide-in-from-top-4 duration-500">
+                <div className="flex-1 min-h-0 mt-2 flex flex-col animate-in fade-in slide-in-from-top-4 duration-500">
                   <PortfolioSliders
                     etfs={etfs}
                     totalWeight={totalWeight}

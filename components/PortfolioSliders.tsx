@@ -127,15 +127,11 @@ export default function PortfolioSliders({
 
   return (
     <Card className="flex-1 w-full flex flex-col min-h-0">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 shrink-0">
-        <CardTitle>{t.portfolioSliders.portfolioWeights}</CardTitle>
-      </CardHeader>
-
       <CardContent className="flex-1 flex flex-col pt-0 space-y-6 min-h-0">
-        <div className="pt-2">
+        <div className="pt-0">
           <EtfForm onAddEtf={onAddEtf} />
         </div>
-        <div className="flex-1 overflow-y-auto min-h-0 space-y-6 pr-4 pb-4 scrollbar-thin scrollbar-thumb-primary/20">
+        <div className="flex-1 overflow-y-auto space-y-6 pr-4 pb-4 scrollbar-thin scrollbar-thumb-primary/20">
           {etfs.map((etf) => (
             <EtfSliderRow
               key={etf.id}
@@ -147,8 +143,8 @@ export default function PortfolioSliders({
         </div>
 
         {/* Total Weight Validation */}
-        <div className="pt-6 mt-auto border-t shrink-0">
-          <div className="flex justify-between items-end mb-2">
+        <div className="pt-0 border-t">
+          <div className="flex justify-between items-end mb-0">
             <span className="text-sm font-medium text-muted-foreground">
               {t.portfolioSliders.totalAllocation}
             </span>
@@ -181,7 +177,7 @@ export default function PortfolioSliders({
             {!isOverweight && !isUnderweight && t.portfolioSliders.perfectlyAllocated}
           </div>
 
-          <div className="mt-6">
+          <div className="mt-2">
             <Button
               variant="outline"
               className="w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-dashed"
