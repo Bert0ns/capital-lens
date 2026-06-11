@@ -23,6 +23,14 @@ const ExposureGlobe = dynamic(
   }
 );
 
+const NetworkGraph = dynamic(
+  () => import('./charts/NetworkGraph').then((mod) => mod.NetworkGraph),
+  {
+    ssr: false,
+    loading: () => <div className="h-[450px] bg-card animate-pulse border border-border" />,
+  }
+);
+
 interface DashboardProps {
   etfs: EtfConfig[];
   totalWeight: number;
@@ -32,6 +40,8 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<
     'Overview' | 'Deep Dive' | '3D Visuals' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'
   >('Overview');
+
+  const [active3DVisual, setActive3DVisual] = useState<'Globe' | 'Network'>('Network');
 
   const {
     geoData,
@@ -155,8 +165,28 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
         )}
 
         {activeTab === '3D Visuals' && (
-          <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300 animate-in fade-in">
-            <ExposureGlobe data={geoData} />
+          <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300 animate-in fade-in bg-card border border-border rounded-xl p-4 shadow-sm">
+            <div className="flex justify-end mb-4">
+              <div className="bg-muted p-1 rounded-lg inline-flex">
+                <button
+                  onClick={() => setActive3DVisual('Globe')}
+                  className={`px-4 py-1.5 text-sm rounded-md font-medium transition-colors ${active3DVisual === 'Globe' ? 'bg-background shadow text-foreground' : 'text-muted-foreground'}`}
+                >
+                  Exposure Globe
+                </button>
+                <button
+                  onClick={() => setActive3DVisual('Network')}
+                  className={`px-4 py-1.5 text-sm rounded-md font-medium transition-colors ${active3DVisual === 'Network' ? 'bg-background shadow text-foreground' : 'text-muted-foreground'}`}
+                >
+                  Concentration Network
+                </button>
+              </div>
+            </div>
+            {active3DVisual === 'Globe' ? (
+              <ExposureGlobe data={geoData} />
+            ) : (
+              <NetworkGraph etfs={etfs} />
+            )}
           </div>
         )}
       </div>
