@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 import { Slider } from './ui/slider';
 import { Button } from './ui/button';
 import { useTranslation } from '../lib/i18n/LanguageContext';
+import EtfForm from './EtfForm';
 
 interface PortfolioSlidersProps {
   etfs: EtfConfig[];
@@ -15,6 +16,7 @@ interface PortfolioSlidersProps {
   onUpdateWeight: (id: string, weight: number) => void;
   onRemove: (id: string) => void;
   onReset: () => void;
+  onAddEtf: (etf: EtfConfig) => void;
 }
 
 function EtfSliderRow({
@@ -94,6 +96,7 @@ export default function PortfolioSliders({
   onUpdateWeight,
   onRemove,
   onReset,
+  onAddEtf,
 }: PortfolioSlidersProps) {
   const { t } = useTranslation();
 
@@ -102,10 +105,15 @@ export default function PortfolioSliders({
       <Card className="h-full flex flex-col items-center justify-center text-center min-h-75 border-dashed">
         <CardContent className="pt-6">
           <p className="font-medium text-muted-foreground">{t.portfolioSliders.noEtfsAdded}</p>
-          <p className="text-sm mt-1 text-muted-foreground/80">
+          <p className="text-sm mt-1 text-muted-foreground/80 mb-6">
             {t.portfolioSliders.uploadCsvToStart}
           </p>
-          <Button onClick={onReset} variant="outline" className="mt-6 flex items-center gap-2">
+          <EtfForm onAddEtf={onAddEtf} />
+          <Button
+            onClick={onReset}
+            variant="outline"
+            className="w-full mt-3 flex items-center justify-center gap-2"
+          >
             <RotateCcw size={16} />
             {t.portfolioSliders.loadDefaultPortfolio}
           </Button>
@@ -124,6 +132,9 @@ export default function PortfolioSliders({
       </CardHeader>
 
       <CardContent className="flex-1 flex flex-col pt-0 space-y-6">
+        <div className="pt-2">
+          <EtfForm onAddEtf={onAddEtf} />
+        </div>
         <div className="flex-1 space-y-6 pr-2">
           {etfs.map((etf) => (
             <EtfSliderRow

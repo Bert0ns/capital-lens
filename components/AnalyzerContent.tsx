@@ -4,10 +4,14 @@ import { usePortfolio } from '@/hooks/usePortfolio';
 import EtfForm from '@/components/EtfForm';
 import PortfolioSliders from '@/components/PortfolioSliders';
 import Dashboard from '@/components/Dashboard';
+import { useState } from 'react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 
 export default function AnalyzerContent() {
   const { t } = useTranslation();
+  const [isSlidersOpen, setIsSlidersOpen] = useState(true);
   const {
     etfs,
     isLoaded,
@@ -36,16 +40,36 @@ export default function AnalyzerContent() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           <div className="xl:col-span-1 relative">
             <div className="xl:sticky xl:top-24 space-y-8 xl:max-h-[calc(100vh-6rem)] flex flex-col">
-              <EtfForm onAddEtf={addEtf} />
-              <div className="flex-1 xl:overflow-y-auto pr-2 pb-4 scrollbar-thin scrollbar-thumb-primary/20">
-                <PortfolioSliders
-                  etfs={etfs}
-                  totalWeight={totalWeight}
-                  onUpdateWeight={updateEtfWeight}
-                  onRemove={removeEtf}
-                  onReset={loadDefaults}
-                />
-              </div>
+              <Collapsible
+                open={isSlidersOpen}
+                onOpenChange={setIsSlidersOpen}
+                className="flex flex-col"
+              >
+                <CollapsibleTrigger className="flex items-center justify-between w-full py-3 px-4 mb-4 text-sm font-semibold text-foreground bg-muted/30 border border-border rounded-xl hover:bg-muted/60 transition-colors cursor-pointer">
+                  <span>{isSlidersOpen ? 'Hide Portfolio Setup' : 'Manage Portfolio'}</span>
+                  {isSlidersOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                </CollapsibleTrigger>
+                <div
+                  className={`grid transition-all duration-500 ease-in-out ${
+                    isSlidersOpen
+                      ? 'grid-rows-[1fr] opacity-100 visible'
+                      : 'grid-rows-[0fr] opacity-0 invisible'
+                  }`}
+                >
+                  <div className="overflow-hidden">
+                    <div className="flex-1 xl:overflow-y-auto pb-4 scrollbar-thin scrollbar-thumb-primary/20 pt-4">
+                      <PortfolioSliders
+                        etfs={etfs}
+                        totalWeight={totalWeight}
+                        onUpdateWeight={updateEtfWeight}
+                        onRemove={removeEtf}
+                        onReset={loadDefaults}
+                        onAddEtf={addEtf}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </Collapsible>
             </div>
           </div>
           <div className="xl:col-span-2">
