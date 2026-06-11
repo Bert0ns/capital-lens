@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { EtfConfig } from '../lib/types';
-import { aggregateBy, aggregateTopHoldings, calculateAverageTer } from '../lib/math';
+import { useDashboardData } from '../hooks/useDashboardData';
 import { Card, CardContent } from './ui/card';
 
 // Extracted Chart Components
@@ -12,6 +12,15 @@ import { ConcentrationChart } from './charts/ConcentrationChart';
 import { DistributionChart } from './charts/DistributionChart';
 import { EtfBarChartCard } from './charts/EtfBarChartCard';
 import { SavingsPlanCalculator } from './SavingsPlanCalculator';
+import dynamic from 'next/dynamic';
+
+const ExposureGlobe = dynamic(
+  () => import('./charts/ExposureGlobe').then((mod) => mod.ExposureGlobe),
+  {
+    ssr: false,
+    loading: () => <div className="h-[450px] bg-card animate-pulse border border-white/10" />,
+  }
+);
 
 interface DashboardProps {
   etfs: EtfConfig[];
@@ -20,95 +29,25 @@ interface DashboardProps {
 
 export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<
-    'Overview' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'
+    'Overview' | '3D Visuals' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'
   >('Overview');
 
-  const geoData = useMemo(() => aggregateBy(etfs, 'country').slice(0, 10), [etfs]);
-  const sectorData = useMemo(() => aggregateBy(etfs, 'sector').slice(0, 10), [etfs]);
-  const currencyData = useMemo(() => aggregateBy(etfs, 'currency').slice(0, 5), [etfs]);
-  const etfAllocationData = useMemo(() => {
-    return etfs
-      .filter((e) => e.globalWeight > 0)
-      .map((e) => ({
-        name: e.name,
-        value: e.globalWeight,
-      }))
-      .sort((a, b) => b.value - a.value);
-  }, [etfs]);
-  const topHoldings = useMemo(() => aggregateTopHoldings(etfs, 10), [etfs]);
-  const avgTer = useMemo(() => calculateAverageTer(etfs), [etfs]);
-
-  const aggregateEtfProperty = useCallback(
-    (property: keyof EtfConfig) => {
-      const map = new Map<string, number>();
-      for (const etf of etfs) {
-        if (etf.globalWeight > 0) {
-          const val = String(etf[property] || 'Unknown');
-          map.set(val, (map.get(val) || 0) + etf.globalWeight);
-        }
-      }
-      return Array.from(map.entries())
-        .map(([name, value]) => ({ name, value }))
-        .sort((a, b) => b.value - a.value);
-    },
-    [etfs]
-  );
-
-  const providerData = useMemo(() => aggregateEtfProperty('issuer'), [aggregateEtfProperty]);
-  const replicationData = useMemo(
-    () => aggregateEtfProperty('replicationMethod'),
-    [aggregateEtfProperty]
-  );
-  const profitData = useMemo(() => aggregateEtfProperty('useOfProfit'), [aggregateEtfProperty]);
-  const domicileData = useMemo(() => aggregateEtfProperty('domicile'), [aggregateEtfProperty]);
-
-  const fundSizeData = useMemo(
-    () =>
-      etfs
-        .filter((e) => e.globalWeight > 0)
-        .map((e) => ({ name: e.name, value: e.fundSize || 0 }))
-        .sort((a, b) => b.value - a.value),
-    [etfs]
-  );
-  const fundAgeData = useMemo(
-    () =>
-      etfs
-        .filter((e) => e.globalWeight > 0)
-        .map((e) => ({ name: e.name, value: e.fundAge || 0 }))
-        .sort((a, b) => b.value - a.value),
-    [etfs]
-  );
-
-  const concentrationData = useMemo(() => {
-    const allHoldings = aggregateTopHoldings(etfs, 50);
-    const result = [];
-    let cumulative = 0;
-    for (let i = 0; i < allHoldings.length; i++) {
-      cumulative += allHoldings[i].value;
-      result.push({
-        name: `Top ${i + 1}`,
-        value: cumulative,
-      });
-    }
-    return result;
-  }, [etfs]);
-
-  const weightDistributionData = useMemo(() => {
-    const allHoldings = aggregateTopHoldings(etfs, 10000);
-    const bins = { '> 1%': 0, '0.5% - 1%': 0, '0.1% - 0.5%': 0, '< 0.1%': 0 };
-    for (const h of allHoldings) {
-      if (h.value >= 1) bins['> 1%'] += h.value;
-      else if (h.value >= 0.5) bins['0.5% - 1%'] += h.value;
-      else if (h.value >= 0.1) bins['0.1% - 0.5%'] += h.value;
-      else bins['< 0.1%'] += h.value;
-    }
-    return [
-      { name: '> 1%', value: bins['> 1%'] },
-      { name: '0.5% - 1%', value: bins['0.5% - 1%'] },
-      { name: '0.1% - 0.5%', value: bins['0.1% - 0.5%'] },
-      { name: '< 0.1%', value: bins['< 0.1%'] },
-    ];
-  }, [etfs]);
+  const {
+    geoData,
+    sectorData,
+    currencyData,
+    etfAllocationData,
+    topHoldings,
+    avgTer,
+    providerData,
+    replicationData,
+    profitData,
+    domicileData,
+    fundSizeData,
+    fundAgeData,
+    concentrationData,
+    weightDistributionData,
+  } = useDashboardData(etfs);
 
   if (etfs.length === 0 || totalWeight === 0) {
     return (
@@ -121,12 +60,8 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
     );
   }
 
-  const tabs: Array<'Overview' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'> = [
-    'Overview',
-    'Fund Details',
-    'Risk Analysis',
-    'Savings Plan',
-  ];
+  const tabs: Array<'Overview' | '3D Visuals' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'> =
+    ['Overview', '3D Visuals', 'Fund Details', 'Risk Analysis', 'Savings Plan'];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -204,7 +139,7 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
               <PieChartCard
                 title="Geographic Exposure"
                 info="A breakdown of the physical country locations of the underlying companies in your portfolio."
-                data={geoData}
+                data={geoData.slice(0, 10)}
               />
             </div>
 
@@ -294,6 +229,12 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
         {activeTab === 'Savings Plan' && (
           <div className="lg:col-span-2 transition-transform duration-300 animate-in fade-in">
             <SavingsPlanCalculator etfs={etfs} totalWeight={totalWeight} />
+          </div>
+        )}
+
+        {activeTab === '3D Visuals' && (
+          <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300 animate-in fade-in">
+            <ExposureGlobe data={geoData} />
           </div>
         )}
       </div>
