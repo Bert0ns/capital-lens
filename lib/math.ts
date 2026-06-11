@@ -168,3 +168,70 @@ export function calculateSavingsPlanProjection(
     finalInvested: currentInvested,
   };
 }
+
+export interface HoldingSearchResult {
+  ticker: string;
+  name: string;
+  totalWeight: number; // Global weight percentage across the entire portfolio
+  breakdown: {
+    etfId: string;
+    etfName: string;
+    contribution: number; // Contribution to the global portfolio
+    internalWeight: number; // Weight inside the specific ETF
+  }[];
+}
+
+export function searchHoldings(etfs: EtfConfig[], query: string): HoldingSearchResult[] {
+  if (!query || query.trim() === '') return [];
+
+  const lowerQuery = query.toLowerCase().trim();
+  // Map of normalized key (either Ticker or Name) to the result object
+  const resultsMap = new Map<string, HoldingSearchResult>();
+
+  for (const etf of etfs) {
+    if (etf.globalWeight <= 0) continue;
+    const globalMultiplier = etf.globalWeight / 100;
+
+    for (const holding of etf.holdings) {
+      const matchName = holding.name.toLowerCase().includes(lowerQuery);
+      const matchTicker =
+        holding.ticker !== 'N/A' && holding.ticker.toLowerCase().includes(lowerQuery);
+
+      if (matchName || matchTicker) {
+        // Decide the grouping key: Prefer Ticker if valid, otherwise fallback to Name
+        const key = holding.ticker !== 'N/A' ? holding.ticker : holding.name;
+
+        if (!resultsMap.has(key)) {
+          resultsMap.set(key, {
+            ticker: holding.ticker,
+            name: holding.name,
+            totalWeight: 0,
+            breakdown: [],
+          });
+        }
+
+        const result = resultsMap.get(key)!;
+        const contribution = holding.weight * globalMultiplier;
+
+        result.totalWeight += contribution;
+
+        // Find if this ETF is already in the breakdown
+        const existingBreakdown = result.breakdown.find((b) => b.etfId === etf.id);
+        if (existingBreakdown) {
+          existingBreakdown.contribution += contribution;
+          existingBreakdown.internalWeight += holding.weight;
+        } else {
+          result.breakdown.push({
+            etfId: etf.id,
+            etfName: etf.name,
+            contribution: contribution,
+            internalWeight: holding.weight,
+          });
+        }
+      }
+    }
+  }
+
+  // Convert to array and sort by highest total weight
+  return Array.from(resultsMap.values()).sort((a, b) => b.totalWeight - a.totalWeight);
+}

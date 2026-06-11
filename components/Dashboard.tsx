@@ -9,6 +9,7 @@ import { Card, CardContent } from './ui/card';
 import { OverviewTab } from './dashboard/OverviewTab';
 import { FundDetailsTab } from './dashboard/FundDetailsTab';
 import { RiskAnalysisTab } from './dashboard/RiskAnalysisTab';
+import { DeepDiveTab } from './dashboard/DeepDiveTab';
 
 // Other features
 import { SavingsPlanCalculator } from './SavingsPlanCalculator';
@@ -29,7 +30,7 @@ interface DashboardProps {
 
 export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<
-    'Overview' | '3D Visuals' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'
+    'Overview' | 'Deep Dive' | '3D Visuals' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'
   >('Overview');
 
   const {
@@ -60,8 +61,9 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
     );
   }
 
-  const tabs: Array<'Overview' | '3D Visuals' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'> =
-    ['Overview', '3D Visuals', 'Fund Details', 'Risk Analysis', 'Savings Plan'];
+  const tabs: Array<
+    'Overview' | 'Deep Dive' | '3D Visuals' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'
+  > = ['Overview', 'Fund Details', 'Risk Analysis', 'Deep Dive', '3D Visuals', 'Savings Plan'];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -120,6 +122,12 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
             geoData={geoData}
             currencyData={currencyData}
           />
+        )}
+
+        {activeTab === 'Deep Dive' && (
+          <div className="lg:col-span-2 animate-in fade-in duration-300">
+            <DeepDiveTab etfs={etfs} />
+          </div>
         )}
 
         {activeTab === 'Fund Details' && (
