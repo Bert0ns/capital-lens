@@ -153,6 +153,13 @@ function GlobeMesh({ data }: { data: { name: string; value: number }[] }) {
 }
 
 export function ExposureGlobe({ data }: { data: { name: string; value: number }[] }) {
+  // Calculate true number of mapped unique regions
+  const uniqueRegionsCount = new Set(
+    data
+      .map((d) => ALIASES[d.name.trim()] || d.name.trim())
+      .filter((name) => name !== 'Unknown' && name !== 'Unione Europea' && BASE_COORDINATES[name])
+  ).size;
+
   return (
     <Card className="hover:border-primary/50 transition-colors duration-500 border border-white/10 bg-card/40 backdrop-blur-md rounded-none">
       <CardHeader className="pb-2 pt-6">
@@ -199,13 +206,11 @@ export function ExposureGlobe({ data }: { data: { name: string; value: number }[
             />
           </Canvas>
 
+          {/* Overlay UI */}
           <div className="absolute bottom-6 left-6 pointer-events-none">
             <div className="flex flex-col gap-2">
-              <p className="text-xs text-primary font-mono bg-primary/10 px-3 py-1.5 border border-primary/20 backdrop-blur-sm uppercase tracking-widest">
-                SYSTEM_ONLINE
-              </p>
-              <p className="text-xs text-slate-300 font-mono bg-white/5 px-3 py-1.5 border border-white/10 backdrop-blur-sm uppercase tracking-widest">
-                {data.length} Regions Active
+              <p className="text-xs text-amber-400 font-mono bg-black/40 px-3 py-1.5 border border-amber-500/30 backdrop-blur-md uppercase tracking-widest shadow-[0_0_10px_rgba(245,158,11,0.1)] rounded-sm">
+                {uniqueRegionsCount} Countries
               </p>
             </div>
           </div>
