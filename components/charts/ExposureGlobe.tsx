@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useRef, Suspense } from 'react';
+import React, { useRef, Suspense, useState } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Sphere, Stars, Html } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
+import { Play, Pause } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import countryCoordsData from '../../public/static/countries_coordinates.json';
 import countryAliasesData from '../../public/static/country_aliases.json';
@@ -42,37 +43,66 @@ function Pillar({
   const radius = 2;
   const pos = getCoordinates(lat, lng, radius);
 
-  const height = Math.max(0.05, (value / maxValue) * 1.5); // Max height is 1.5
-  const ratio = value / maxValue;
-  const dynamicDistanceFactor = 4 + ratio * 8; // Scales from 4 (smallest) to 12 (largest)
+  const targetHeight = Math.max(0.05, (value / maxValue) * 1.5);
+  const targetRatio = value / maxValue;
+  const targetDistanceFactor = 4 + targetRatio * 8;
 
-  const meshRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<THREE.Group>(null);
+  const cylinderRef = useRef<THREE.Mesh>(null);
+  const labelGroupRef = useRef<THREE.Group>(null);
+
+  const currentHeight = useRef(0.01);
 
   React.useEffect(() => {
-    if (meshRef.current) {
-      meshRef.current.lookAt(0, 0, 0);
+    if (groupRef.current) {
+      groupRef.current.lookAt(0, 0, 0);
     }
   }, [pos]);
 
+  useFrame((state, delta) => {
+    // Smoothly interpolate the height
+    currentHeight.current = THREE.MathUtils.damp(currentHeight.current, targetHeight, 6, delta);
+
+    // Update cylinder scale and position
+    if (cylinderRef.current) {
+      cylinderRef.current.scale.y = currentHeight.current;
+      cylinderRef.current.position.z = -currentHeight.current / 2;
+    }
+
+    // Update label position to stay above the pillar
+    if (labelGroupRef.current) {
+      labelGroupRef.current.position.z = -currentHeight.current - 0.1;
+    }
+  });
+
   return (
-    <group position={pos} ref={meshRef}>
-      {/* Rotate the cylinder so its Y axis points along the outward normal (-Z of the group) */}
-      <mesh position={[0, 0, -height / 2]} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, height, 8]} />
+    <group position={pos} ref={groupRef}>
+      {/* Cylinder rotated to align its local Y axis with the group's outward normal (-Z) */}
+      <mesh ref={cylinderRef} rotation={[Math.PI / 2, 0, 0]}>
+        {/* Base height 1, scale.y will dynamically alter it */}
+        <cylinderGeometry args={[0.02, 0.02, 1, 8]} />
         <meshStandardMaterial color="#fcd34d" emissive="#f59e0b" emissiveIntensity={2.0} />
       </mesh>
 
-      <Html position={[0, 0, -height - 0.1]} center distanceFactor={dynamicDistanceFactor}>
-        <div className="px-1.5 py-1 bg-[#020617]/80 backdrop-blur-md border border-amber-500/40 text-amber-400 font-mono text-[7px] leading-tight rounded-sm flex flex-col items-center shadow-none whitespace-nowrap">
-          <span className="font-bold tracking-wider uppercase">{name}</span>
-          <span className="opacity-80">{value.toFixed(1)}%</span>
-        </div>
-      </Html>
+      <group ref={labelGroupRef}>
+        <Html center distanceFactor={targetDistanceFactor}>
+          <div className="px-1.5 py-1 bg-[#020617]/80 backdrop-blur-md border border-amber-500/40 text-amber-400 font-mono text-[7px] leading-tight rounded-sm flex flex-col items-center shadow-none whitespace-nowrap">
+            <span className="font-bold tracking-wider uppercase">{name}</span>
+            <span className="opacity-80">{value.toFixed(1)}%</span>
+          </div>
+        </Html>
+      </group>
     </group>
   );
 }
 
-function GlobeMesh({ data }: { data: { name: string; value: number }[] }) {
+function GlobeMesh({
+  data,
+  isRotating,
+}: {
+  data: { name: string; value: number }[];
+  isRotating: boolean;
+}) {
   const groupRef = useRef<THREE.Group>(null);
 
   // Merge duplicates that map to the same country name
@@ -100,9 +130,9 @@ function GlobeMesh({ data }: { data: { name: string; value: number }[] }) {
   const topologyMap = useLoader(THREE.TextureLoader, '/earth-topology.png');
 
   // Gentle floating rotation applied to the ENTIRE group (Globe + Pillars)
-  useFrame((state, delta) => {
-    if (groupRef.current) {
-      groupRef.current.rotation.y += delta * 0.15;
+  useFrame(() => {
+    if (groupRef.current && isRotating) {
+      groupRef.current.rotation.y += 0.001; // Auto-rotate
     }
   });
 
@@ -153,6 +183,8 @@ function GlobeMesh({ data }: { data: { name: string; value: number }[] }) {
 }
 
 export function ExposureGlobe({ data }: { data: { name: string; value: number }[] }) {
+  const [isRotating, setIsRotating] = useState(true);
+
   // Calculate true number of mapped unique regions
   const uniqueRegionsCount = new Set(
     data
@@ -162,9 +194,8 @@ export function ExposureGlobe({ data }: { data: { name: string; value: number }[
 
   return (
     <Card className="hover:border-primary/50 transition-colors duration-500 border border-white/10 bg-card/40 backdrop-blur-md rounded-none">
-      <CardHeader className="pb-2 pt-6">
+      <CardHeader className="pb-2 pt-2">
         <CardTitle className="text-xl font-black uppercase tracking-widest text-white flex items-center gap-3">
-          <div className="w-2 h-2 bg-primary rounded-full animate-pulse shadow-[0_0_8px_rgba(34,211,238,1)]"></div>
           Interactive Global Exposure
         </CardTitle>
         <CardDescription className="text-slate-400 font-light tracking-wide">
@@ -180,7 +211,7 @@ export function ExposureGlobe({ data }: { data: { name: string; value: number }[
 
             {/* Wrap the globe in Suspense while textures load */}
             <Suspense fallback={null}>
-              <GlobeMesh data={data} />
+              <GlobeMesh data={data} isRotating={isRotating} />
             </Suspense>
 
             <EffectComposer>
@@ -199,7 +230,7 @@ export function ExposureGlobe({ data }: { data: { name: string; value: number }[
             <OrbitControls
               enableZoom={false}
               enablePan={false}
-              autoRotate
+              autoRotate={isRotating}
               autoRotateSpeed={0.5}
               maxPolarAngle={Math.PI / 1.5}
               minPolarAngle={Math.PI / 3}
@@ -207,12 +238,17 @@ export function ExposureGlobe({ data }: { data: { name: string; value: number }[
           </Canvas>
 
           {/* Overlay UI */}
-          <div className="absolute bottom-6 left-6 pointer-events-none">
-            <div className="flex flex-col gap-2">
-              <p className="text-xs text-amber-400 font-mono bg-black/40 px-3 py-1.5 border border-amber-500/30 backdrop-blur-md uppercase tracking-widest shadow-[0_0_10px_rgba(245,158,11,0.1)] rounded-sm">
-                {uniqueRegionsCount} Countries
-              </p>
-            </div>
+          <div className="absolute bottom-6 left-6 pointer-events-none flex flex-col gap-3">
+            <p className="text-[10px] text-amber-400 font-mono bg-black/40 px-3 py-1.5 border border-amber-500/30 backdrop-blur-md uppercase tracking-widest shadow-[0_0_10px_rgba(245,158,11,0.1)] rounded-sm w-max">
+              {uniqueRegionsCount} Regions Active
+            </p>
+            <button
+              onClick={() => setIsRotating(!isRotating)}
+              className="pointer-events-auto text-[10px] text-cyan-400 font-mono bg-black/40 px-3 py-1.5 border border-cyan-500/30 backdrop-blur-md uppercase tracking-widest hover:bg-cyan-900/40 transition-colors shadow-[0_0_10px_rgba(34,211,238,0.1)] rounded-sm flex items-center justify-center w-max gap-2"
+            >
+              {isRotating ? <Pause size={12} /> : <Play size={12} />}
+              {isRotating ? 'Pause Rotation' : 'Resume Rotation'}
+            </button>
           </div>
         </div>
       </CardContent>
