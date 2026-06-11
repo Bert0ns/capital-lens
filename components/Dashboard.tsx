@@ -5,12 +5,12 @@ import { EtfConfig } from '../lib/types';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { Card, CardContent } from './ui/card';
 
-// Extracted Chart Components
-import { TopHoldingsChart } from './charts/TopHoldingsChart';
-import { PieChartCard } from './charts/PieChartCard';
-import { ConcentrationChart } from './charts/ConcentrationChart';
-import { DistributionChart } from './charts/DistributionChart';
-import { EtfBarChartCard } from './charts/EtfBarChartCard';
+// Extracted Tab Components
+import { OverviewTab } from './dashboard/OverviewTab';
+import { FundDetailsTab } from './dashboard/FundDetailsTab';
+import { RiskAnalysisTab } from './dashboard/RiskAnalysisTab';
+
+// Other features
 import { SavingsPlanCalculator } from './SavingsPlanCalculator';
 import dynamic from 'next/dynamic';
 
@@ -113,117 +113,31 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
       {/* Tab Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-in slide-in-from-bottom-2 fade-in duration-500">
         {activeTab === 'Overview' && (
-          <>
-            <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300">
-              <TopHoldingsChart data={topHoldings} />
-            </div>
-
-            <div className="transition-transform hover:scale-[1.02] duration-300">
-              <PieChartCard
-                title="ETF Allocation"
-                info="A macro-level breakdown of the weights you assigned to each individual ETF in your portfolio."
-                data={etfAllocationData}
-                colorOffset={6}
-              />
-            </div>
-
-            <div className="transition-transform hover:scale-[1.02] duration-300">
-              <PieChartCard
-                title="Sector Exposure"
-                info="The industry breakdown (e.g., Technology, Healthcare) of the underlying companies in your portfolio."
-                data={sectorData}
-              />
-            </div>
-
-            <div className="transition-transform hover:scale-[1.02] duration-300">
-              <PieChartCard
-                title="Geographic Exposure"
-                info="A breakdown of the physical country locations of the underlying companies in your portfolio."
-                data={geoData.slice(0, 10)}
-              />
-            </div>
-
-            <div className="transition-transform hover:scale-[1.02] duration-300">
-              <PieChartCard
-                title="Currency Exposure"
-                info="Your risk exposure to different foreign exchange currencies based on the trading currency of your underlying assets."
-                data={currencyData}
-                colorOffset={4}
-              />
-            </div>
-          </>
+          <OverviewTab
+            topHoldings={topHoldings}
+            etfAllocationData={etfAllocationData}
+            sectorData={sectorData}
+            geoData={geoData}
+            currencyData={currencyData}
+          />
         )}
 
         {activeTab === 'Fund Details' && (
-          <>
-            <div className="transition-transform hover:scale-[1.02] duration-300">
-              <PieChartCard
-                title="Provider Allocation"
-                info="A breakdown of the financial institutions that manage your ETFs (e.g., Vanguard, iShares)."
-                data={providerData}
-                colorOffset={2}
-              />
-            </div>
-
-            <div className="transition-transform hover:scale-[1.02] duration-300">
-              <PieChartCard
-                title="Fund Domicile"
-                info="The legal jurisdiction where your ETFs are registered (important for taxation)."
-                data={domicileData}
-                colorOffset={1}
-              />
-            </div>
-
-            <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300">
-              <EtfBarChartCard
-                title="Fund Size"
-                info="Total Assets Under Management (AUM) for each ETF in your portfolio (in millions)."
-                data={fundSizeData}
-                unit="$M"
-                colorOffset={5}
-              />
-            </div>
-
-            <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300">
-              <EtfBarChartCard
-                title="Fund Age"
-                info="The number of years since each ETF was launched."
-                data={fundAgeData}
-                unit="Years"
-                colorOffset={7}
-              />
-            </div>
-          </>
+          <FundDetailsTab
+            providerData={providerData}
+            domicileData={domicileData}
+            fundSizeData={fundSizeData}
+            fundAgeData={fundAgeData}
+          />
         )}
 
         {activeTab === 'Risk Analysis' && (
-          <>
-            <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300">
-              <ConcentrationChart data={concentrationData} />
-            </div>
-
-            <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300">
-              <DistributionChart data={weightDistributionData} />
-            </div>
-
-            <div className="transition-transform hover:scale-[1.02] duration-300">
-              <PieChartCard
-                title="Replication Method"
-                info="How the ETFs track their indices: Physical (buying actual stocks) vs Synthetic (using derivatives)."
-                data={replicationData}
-                colorOffset={8}
-              />
-            </div>
-
-            <div className="transition-transform hover:scale-[1.02] duration-300">
-              <PieChartCard
-                title="Use of Profit"
-                info="Accumulating (reinvests dividends automatically) vs Distributing (pays dividends out to you)."
-                data={profitData}
-                colorOffset={3}
-              />
-            </div>
-          </>
+          <RiskAnalysisTab
+            concentrationData={concentrationData}
+            weightDistributionData={weightDistributionData}
+            replicationData={replicationData}
+            profitData={profitData}
+          />
         )}
 
         {activeTab === 'Savings Plan' && (
