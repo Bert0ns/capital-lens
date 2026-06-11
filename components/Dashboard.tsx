@@ -4,6 +4,9 @@ import React, { useState } from 'react';
 import { EtfConfig } from '../lib/types';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { Card, CardContent } from './ui/card';
+import { Slider } from './ui/slider';
+import { Switch } from './ui/switch';
+import { Label } from './ui/label';
 
 // Extracted Tab Components
 import { OverviewTab } from './dashboard/OverviewTab';
@@ -42,6 +45,20 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
   >('Overview');
 
   const [active3DVisual, setActive3DVisual] = useState<'Globe' | 'Network'>('Network');
+
+  const [networkLimit, setNetworkLimit] = useState<number[]>([100]);
+  const [networkLivePhysics, setNetworkLivePhysics] = useState(false);
+
+  const maxHoldings = React.useMemo(() => {
+    const activeEtfs = etfs.filter((e) => e.globalWeight > 0);
+    const unique = new Set();
+    for (const etf of activeEtfs) {
+      for (const h of etf.holdings) {
+        unique.add(h.ticker !== 'N/A' ? h.ticker : h.name);
+      }
+    }
+    return Math.max(10, unique.size);
+  }, [etfs]);
 
   const {
     geoData,
@@ -185,7 +202,49 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
             {active3DVisual === 'Globe' ? (
               <ExposureGlobe data={geoData} />
             ) : (
-              <NetworkGraph etfs={etfs} />
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row justify-between gap-6 p-4 bg-muted/30 rounded-lg border border-border">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
+                        Top Holdings Rendered
+                      </Label>
+                      <span className="text-xs font-mono bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                        {networkLimit[0] >= maxHoldings ? 'ALL' : networkLimit[0]}
+                      </span>
+                    </div>
+                    <Slider
+                      value={networkLimit}
+                      onValueChange={(val) =>
+                        setNetworkLimit(Array.isArray(val) ? [...val] : [val])
+                      }
+                      max={maxHoldings}
+                      min={10}
+                      step={10}
+                      className="py-2"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2 min-w-[150px]">
+                    <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
+                      Concentration Physics
+                    </Label>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <Switch
+                        id="physics-mode"
+                        checked={networkLivePhysics}
+                        onCheckedChange={setNetworkLivePhysics}
+                      />
+                      <Label
+                        htmlFor="physics-mode"
+                        className="text-xs text-muted-foreground cursor-pointer font-medium"
+                      >
+                        Live Physics Engine
+                      </Label>
+                    </div>
+                  </div>
+                </div>
+                <NetworkGraph etfs={etfs} limit={networkLimit} livePhysics={networkLivePhysics} />
+              </div>
             )}
           </div>
         )}

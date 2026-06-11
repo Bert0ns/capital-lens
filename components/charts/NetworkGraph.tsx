@@ -6,36 +6,21 @@ import SpriteText from 'three-spritetext';
 import { useTheme } from 'next-themes';
 import { EtfConfig } from '../../lib/types';
 import { generateNetworkData } from '../../lib/math';
-import { Slider } from '../ui/slider';
-import { Switch } from '../ui/switch';
-import { Label } from '../ui/label';
 
 interface NetworkGraphProps {
   etfs: EtfConfig[];
+  limit: number[];
+  livePhysics: boolean;
 }
 
-export function NetworkGraph({ etfs }: NetworkGraphProps) {
+export function NetworkGraph({ etfs, limit, livePhysics }: NetworkGraphProps) {
   const fgRef = useRef<any>(null);
   const { resolvedTheme } = useTheme();
-  const [limit, setLimit] = useState<number[]>([100]);
-  const [livePhysics, setLivePhysics] = useState(false);
   const [dimensions, setDimensions] = useState({ width: 800, height: 450 });
   const containerRef = useRef<HTMLDivElement>(null);
 
   const isExtremeVolume = limit[0] > 1000;
   const isHighVolume = limit[0] > 300;
-
-  const maxHoldings = useMemo(() => {
-    const activeEtfs = etfs.filter((e) => e.globalWeight > 0);
-    const unique = new Set();
-    for (const etf of activeEtfs) {
-      for (const h of etf.holdings) {
-        unique.add(h.ticker !== 'N/A' ? h.ticker : h.name);
-      }
-    }
-    // Return the true number of unique holdings, minimum 10
-    return Math.max(10, unique.size);
-  }, [etfs]);
 
   const rawData = useMemo(() => generateNetworkData(etfs, limit[0]), [etfs, limit]);
 
@@ -214,34 +199,7 @@ export function NetworkGraph({ etfs }: NetworkGraphProps) {
         showNavInfo={false}
       />
       <div className="absolute top-4 left-4 pointer-events-none bg-background/90 backdrop-blur-md px-4 py-3 rounded-xl border border-border shadow-lg flex flex-col gap-3 min-w-[280px]">
-        <div className="pointer-events-auto w-full">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-bold uppercase tracking-widest text-foreground">
-              Top {limit[0]} Holdings
-            </span>
-          </div>
-          <Slider
-            value={limit}
-            onValueChange={(val) => setLimit(Array.isArray(val) ? [...val] : [val])}
-            min={10}
-            max={maxHoldings}
-            step={10}
-            className="w-full"
-          />
-        </div>
-        <div className="w-full h-px bg-border my-1" />
-        <p className="text-xs font-bold uppercase tracking-widest text-foreground">
-          Concentration Physics
-        </p>
-        <div className="flex items-center space-x-2 my-1 pointer-events-auto">
-          <Switch id="physics-mode" checked={livePhysics} onCheckedChange={setLivePhysics} />
-          <Label
-            htmlFor="physics-mode"
-            className="text-xs text-muted-foreground cursor-pointer font-medium"
-          >
-            Live Physics Engine
-          </Label>
-        </div>
+        <p className="text-xs font-bold uppercase tracking-widest text-foreground">Legend</p>
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <div
@@ -258,7 +216,7 @@ export function NetworkGraph({ etfs }: NetworkGraphProps) {
             <span className="text-xs text-muted-foreground font-medium">Overlapping Holdings</span>
           </div>
         </div>
-        <p className="text-[10px] text-muted-foreground/80 max-w-[250px] leading-tight">
+        <p className="text-[10px] text-muted-foreground/80 max-w-[250px] leading-tight mt-1">
           Lines pull overlapping companies towards the center. Thicker lines and faster particles
           indicate heavier concentration weight.
         </p>
