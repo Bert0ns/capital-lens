@@ -24,6 +24,7 @@ export function Pillar({
 
   const targetHeight = Math.max(0.05, (value / maxValue) * 1.5);
   const targetRatio = value / maxValue;
+  const targetRadius = Math.max(0.01, 0.01 + targetRatio * 0.04);
   const targetDistanceFactor = 4 + targetRatio * 8;
 
   const groupRef = useRef<THREE.Group>(null);
@@ -31,6 +32,7 @@ export function Pillar({
   const labelGroupRef = useRef<THREE.Group>(null);
 
   const currentHeight = useRef(0.01);
+  const currentRadius = useRef(0.01);
 
   React.useEffect(() => {
     if (groupRef.current) {
@@ -40,9 +42,14 @@ export function Pillar({
 
   useFrame((state, delta) => {
     currentHeight.current = THREE.MathUtils.damp(currentHeight.current, targetHeight, 6, delta);
+    currentRadius.current = THREE.MathUtils.damp(currentRadius.current, targetRadius, 6, delta);
 
     if (cylinderRef.current) {
-      cylinderRef.current.scale.y = currentHeight.current;
+      cylinderRef.current.scale.set(
+        currentRadius.current,
+        currentHeight.current,
+        currentRadius.current
+      );
       cylinderRef.current.position.z = -currentHeight.current / 2;
     }
 
@@ -54,7 +61,7 @@ export function Pillar({
   return (
     <group position={pos} ref={groupRef}>
       <mesh ref={cylinderRef} rotation={[Math.PI / 2, 0, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, 1, 8]} />
+        <cylinderGeometry args={[1, 1, 1, 16]} />
         <meshStandardMaterial color="#fcd34d" emissive="#f59e0b" emissiveIntensity={2.0} />
       </mesh>
 
