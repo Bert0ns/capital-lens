@@ -51,21 +51,17 @@ async function parseCustomCsv(
   });
 }
 
-// Safely parse European numbers (1.234,56 or 12,34%)
+// Safely parse numbers (handles both 1.234,56 and 1,234.56 formats)
 const parseNumber = (val: unknown): number => {
   if (typeof val === 'number') return val;
   if (typeof val === 'string') {
-    // Remove spaces, '%', then convert thousands separators ('.') to nothing, and decimal (',') to '.'
-    // Wait, if it's US format (1,234.56), this will break.
-    // Let's do a smart replace:
     let cleaned = val.replace(/\s/g, '').replace('%', '');
 
-    // If it has both . and , it's tricky.
-    // Let's assume European if the last separator is a comma: "1.234,56"
     if (cleaned.lastIndexOf(',') > cleaned.lastIndexOf('.')) {
+      // European format: 1.234,56 -> 1234.56
       cleaned = cleaned.replace(/\./g, '').replace(',', '.');
     } else {
-      // US format "1,234.56" or just "1234.56"
+      // US format: 1,234.56 -> 1234.56
       cleaned = cleaned.replace(/,/g, '');
     }
 
@@ -75,49 +71,102 @@ const parseNumber = (val: unknown): number => {
   return 0;
 };
 
-export class ISharesParser implements CsvParserStrategy {
-  async parse(file: File): Promise<ParseResult> {
-    try {
-      const data = await parseCustomCsv(file, ["Ticker dell'emittente", 'Ticker', 'Simbolo']);
-
-      const holdings: Holding[] = data
-        .map((row: Record<string, unknown>) => ({
-          ticker: String(row["Ticker dell'emittente"] || row['Ticker'] || row['Simbolo'] || 'N/A'),
-          name: String(row['Nome'] || row['Name'] || 'Unknown'),
-          weight: parseNumber(row['Ponderazione (%)'] || row['Weight (%)'] || row['Peso (%)'] || 0),
-          sector: String(row['Settore'] || row['Sector'] || 'Other'),
-          country: String(row['Area Geografica'] || row['Location'] || row['Paese'] || 'Unknown'),
-          currency: String(row['Valuta di mercato'] || row['Currency'] || row['Valuta'] || 'USD'),
-        }))
-        .filter((h) => h.weight > 0 && h.ticker !== 'N/A' && h.name !== 'Unknown');
-
-      return { holdings, errors: [] };
-    } catch (e: unknown) {
-      return { holdings: [], errors: [e instanceof Error ? e.message : String(e)] };
-    }
-  }
+interface ParserConfig {
+  headerKeywords: string[];
+  fields: {
+    ticker: string[];
+    name: string[];
+    weight: string[];
+    sector: string[];
+    country: string[];
+    currency?: string[];
+  };
+  customCurrencyExtractor?: (row: Record<string, unknown>) => string;
 }
 
-export class VanguardParser implements CsvParserStrategy {
+const PARSER_CONFIGS: Record<string, ParserConfig> = {
+  iShares: {
+    headerKeywords: ["Ticker dell'emittente", 'Ticker', 'Simbolo'],
+    fields: {
+      ticker: ["Ticker dell'emittente", 'Ticker', 'Simbolo'],
+      name: ['Nome', 'Name'],
+      weight: ['Ponderazione (%)', 'Weight (%)', 'Peso (%)'],
+      sector: ['Settore', 'Sector'],
+      country: ['Area Geografica', 'Location', 'Paese'],
+      currency: ['Valuta di mercato', 'Currency', 'Valuta'],
+    },
+  },
+  Vanguard: {
+    headerKeywords: ['Ticker', 'Symbol'],
+    fields: {
+      ticker: ['Ticker', 'Symbol'],
+      name: ['Nome delle partecipazioni', 'Nome', 'Company'],
+      weight: ['% del valore di mercato', 'Fund Weight'],
+      sector: ['Settore', 'Sector'],
+      country: ['Regione', 'Market'],
+    },
+    customCurrencyExtractor: (row) => {
+      const marketValueStr = String(row['Valore di mercato'] || row['Market Value'] || '');
+      const currencyMatch = marketValueStr.match(/[A-Z]{3}$/);
+      return currencyMatch ? currencyMatch[0] : 'USD';
+    },
+  },
+  Amundi: {
+    headerKeywords: ['Asset class', 'Issuer Name'],
+    fields: {
+      ticker: ['Codice ISIN', 'ISIN', 'Ticker'],
+      name: ['Nome', 'Issuer Name'],
+      weight: ['Peso', 'Portfolio Weight'],
+      sector: ['Settore', 'Sector'],
+      country: ['Paese', 'Country'],
+      currency: ['Valuta', 'Currency'],
+    },
+  },
+  Lyxor: {
+    headerKeywords: ['ISIN', 'Symbol', 'Ticker'],
+    fields: {
+      ticker: ['Symbol', 'Ticker', 'ISIN'],
+      name: ['Security Name', 'Nome'],
+      weight: ['Weight', 'Peso'],
+      sector: ['Sector', 'Settore'],
+      country: ['Country', 'Paese'],
+      currency: ['Currency', 'Valuta'],
+    },
+  },
+};
+
+export class GenericCsvParser implements CsvParserStrategy {
+  constructor(private config: ParserConfig) {}
+
   async parse(file: File): Promise<ParseResult> {
     try {
-      const data = await parseCustomCsv(file, ['Ticker', 'Symbol']);
+      const data = await parseCustomCsv(file, this.config.headerKeywords);
 
       const holdings: Holding[] = data
         .map((row: Record<string, unknown>) => {
-          // Extract currency from "427.402.704,26 USD" if present
-          const marketValueStr = String(row['Valore di mercato'] || row['Market Value'] || '');
-          const currencyMatch = marketValueStr.match(/[A-Z]{3}$/);
-          const currency = currencyMatch ? currencyMatch[0] : 'USD';
+          const getField = (keys?: string[]) => {
+            if (!keys) return undefined;
+            for (const key of keys) {
+              if (row[key] !== undefined && row[key] !== '') {
+                return row[key];
+              }
+            }
+            return undefined;
+          };
+
+          let currency = 'USD';
+          if (this.config.customCurrencyExtractor) {
+            currency = this.config.customCurrencyExtractor(row);
+          } else {
+            currency = String(getField(this.config.fields.currency) || 'USD');
+          }
 
           return {
-            ticker: String(row['Ticker'] || row['Symbol'] || 'N/A'),
-            name: String(
-              row['Nome delle partecipazioni'] || row['Nome'] || row['Company'] || 'Unknown'
-            ),
-            weight: parseNumber(row['% del valore di mercato'] || row['Fund Weight'] || 0),
-            sector: String(row['Settore'] || row['Sector'] || 'Other'),
-            country: String(row['Regione'] || row['Market'] || 'Unknown'),
+            ticker: String(getField(this.config.fields.ticker) || 'N/A'),
+            name: String(getField(this.config.fields.name) || 'Unknown'),
+            weight: parseNumber(getField(this.config.fields.weight) || 0),
+            sector: String(getField(this.config.fields.sector) || 'Other'),
+            country: String(getField(this.config.fields.country) || 'Unknown'),
             currency,
           };
         })
@@ -130,48 +179,26 @@ export class VanguardParser implements CsvParserStrategy {
   }
 }
 
-export class AmundiParser implements CsvParserStrategy {
-  async parse(file: File): Promise<ParseResult> {
-    try {
-      // "Asset class" is unique to the header row in Amundi CSVs, unlike "Codice ISIN" which is also in metadata
-      const data = await parseCustomCsv(file, ['Asset class', 'Issuer Name']);
-
-      const holdings: Holding[] = data
-        .map((row: Record<string, unknown>) => ({
-          ticker: String(row['Codice ISIN'] || row['ISIN'] || row['Ticker'] || 'N/A'),
-          name: String(row['Nome'] || row['Issuer Name'] || 'Unknown'),
-          weight: parseNumber(row['Peso'] || row['Portfolio Weight'] || 0),
-          sector: String(row['Settore'] || row['Sector'] || 'Other'),
-          country: String(row['Paese'] || row['Country'] || 'Unknown'),
-          currency: String(row['Valuta'] || row['Currency'] || 'USD'),
-        }))
-        .filter((h) => h.weight > 0 && h.ticker !== 'N/A' && h.name !== 'Unknown');
-
-      return { holdings, errors: [] };
-    } catch (e: unknown) {
-      return { holdings: [], errors: [e instanceof Error ? e.message : String(e)] };
-    }
+export class ISharesParser extends GenericCsvParser {
+  constructor() {
+    super(PARSER_CONFIGS.iShares);
   }
 }
 
-export class LyxorParser implements CsvParserStrategy {
-  async parse(file: File): Promise<ParseResult> {
-    try {
-      const data = await parseCustomCsv(file, ['ISIN', 'Symbol', 'Ticker']);
-      const holdings: Holding[] = data
-        .map((row: Record<string, unknown>) => ({
-          ticker: String(row['Symbol'] || row['Ticker'] || row['ISIN'] || 'N/A'),
-          name: String(row['Security Name'] || row['Nome'] || 'Unknown'),
-          weight: parseNumber(row['Weight'] || row['Peso'] || 0),
-          sector: String(row['Sector'] || row['Settore'] || 'Other'),
-          country: String(row['Country'] || row['Paese'] || 'Unknown'),
-          currency: String(row['Currency'] || row['Valuta'] || 'USD'),
-        }))
-        .filter((h) => h.weight > 0 && h.ticker !== 'N/A' && h.name !== 'Unknown');
+export class VanguardParser extends GenericCsvParser {
+  constructor() {
+    super(PARSER_CONFIGS.Vanguard);
+  }
+}
 
-      return { holdings, errors: [] };
-    } catch (e: unknown) {
-      return { holdings: [], errors: [e instanceof Error ? e.message : String(e)] };
-    }
+export class AmundiParser extends GenericCsvParser {
+  constructor() {
+    super(PARSER_CONFIGS.Amundi);
+  }
+}
+
+export class LyxorParser extends GenericCsvParser {
+  constructor() {
+    super(PARSER_CONFIGS.Lyxor);
   }
 }
