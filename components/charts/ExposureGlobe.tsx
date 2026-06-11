@@ -2,7 +2,8 @@
 
 import React, { useRef, Suspense } from 'react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import { OrbitControls, Sphere, Stars } from '@react-three/drei';
+import { OrbitControls, Sphere, Stars, Html } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import countryCoordsData from '../../public/static/countries_coordinates.json';
@@ -50,11 +51,13 @@ function getCoordinates(lat: number, lng: number, radius: number) {
 }
 
 function Pillar({
+  name,
   lat,
   lng,
   value,
   maxValue,
 }: {
+  name: string;
   lat: number;
   lng: number;
   value: number;
@@ -64,6 +67,8 @@ function Pillar({
   const pos = getCoordinates(lat, lng, radius);
 
   const height = Math.max(0.05, (value / maxValue) * 1.5); // Max height is 1.5
+  const ratio = value / maxValue;
+  const dynamicDistanceFactor = 4 + ratio * 8; // Scales from 4 (smallest) to 12 (largest)
 
   const meshRef = useRef<THREE.Group>(null);
 
@@ -78,8 +83,15 @@ function Pillar({
       {/* Rotate the cylinder so its Y axis points along the outward normal (-Z of the group) */}
       <mesh position={[0, 0, -height / 2]} rotation={[Math.PI / 2, 0, 0]}>
         <cylinderGeometry args={[0.02, 0.02, height, 8]} />
-        <meshStandardMaterial color="#fcd34d" emissive="#f59e0b" emissiveIntensity={2} />
+        <meshStandardMaterial color="#fcd34d" emissive="#f59e0b" emissiveIntensity={2.0} />
       </mesh>
+
+      <Html position={[0, 0, -height - 0.1]} center distanceFactor={dynamicDistanceFactor}>
+        <div className="px-1.5 py-1 bg-[#020617]/80 backdrop-blur-md border border-amber-500/40 text-amber-400 font-mono text-[7px] leading-tight rounded-sm flex flex-col items-center shadow-none whitespace-nowrap">
+          <span className="font-bold tracking-wider uppercase">{name}</span>
+          <span className="opacity-80">{value.toFixed(1)}%</span>
+        </div>
+      </Html>
     </group>
   );
 }
@@ -106,7 +118,7 @@ function GlobeMesh({ data }: { data: { name: string; value: number }[] }) {
           color="#1e293b" // Slate-800: sophisticated dark grey-blue ocean
           emissiveMap={topologyMap}
           emissive="#22d3ee" // Cyan continents
-          emissiveIntensity={1.0} // Toned down from 1.2
+          emissiveIntensity={0.7} // Toned down from 1.0 to reduce bloom
           bumpMap={topologyMap}
           bumpScale={0.03} // Toned down bump scale slightly
           roughness={0.7} // More matte finish
@@ -134,7 +146,14 @@ function GlobeMesh({ data }: { data: { name: string; value: number }[] }) {
         const coords = BASE_COORDINATES[mappedName] || [0, 0];
 
         return (
-          <Pillar key={i} lat={coords[0]} lng={coords[1]} value={item.value} maxValue={maxValue} />
+          <Pillar
+            key={i}
+            name={mappedName}
+            lat={coords[0]}
+            lng={coords[1]}
+            value={item.value}
+            maxValue={maxValue}
+          />
         );
       })}
     </group>
@@ -164,6 +183,10 @@ export function ExposureGlobe({ data }: { data: { name: string; value: number }[
             <Suspense fallback={null}>
               <GlobeMesh data={data} />
             </Suspense>
+
+            <EffectComposer>
+              <Bloom luminanceThreshold={0.5} luminanceSmoothing={0.9} intensity={0.8} />
+            </EffectComposer>
 
             <Stars
               radius={100}
