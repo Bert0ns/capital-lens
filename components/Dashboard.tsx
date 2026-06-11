@@ -12,6 +12,15 @@ import { ConcentrationChart } from './charts/ConcentrationChart';
 import { DistributionChart } from './charts/DistributionChart';
 import { EtfBarChartCard } from './charts/EtfBarChartCard';
 import { SavingsPlanCalculator } from './SavingsPlanCalculator';
+import dynamic from 'next/dynamic';
+
+const ExposureGlobe = dynamic(
+  () => import('./charts/ExposureGlobe').then((mod) => mod.ExposureGlobe),
+  {
+    ssr: false,
+    loading: () => <div className="h-[450px] bg-card animate-pulse border border-white/10" />,
+  }
+);
 
 interface DashboardProps {
   etfs: EtfConfig[];
@@ -179,6 +188,10 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-in slide-in-from-bottom-2 fade-in duration-500">
         {activeTab === 'Overview' && (
           <>
+            <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300">
+              <ExposureGlobe data={geoData} />
+            </div>
+
             <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300">
               <TopHoldingsChart data={topHoldings} />
             </div>
