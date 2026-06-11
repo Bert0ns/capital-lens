@@ -7,34 +7,10 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import countryCoordsData from '../../public/static/countries_coordinates.json';
+import countryAliasesData from '../../public/static/country_aliases.json';
 
 const BASE_COORDINATES = countryCoordsData as unknown as Record<string, [number, number]>;
-
-const ALIASES: Record<string, string> = {
-  // Italian Translations
-  'Stati Uniti': 'United States',
-  Giappone: 'Japan',
-  'Regno Unito': 'United Kingdom',
-  Francia: 'France',
-  Germania: 'Germany',
-  Svizzera: 'Switzerland',
-  Cina: 'China',
-  'Corea del Sud': 'South Korea',
-  Brasile: 'Brazil',
-  'Paesi Bassi': 'Netherlands',
-  Svezia: 'Sweden',
-  Italia: 'Italy',
-  Spagna: 'Spain',
-
-  // Missing / Extra common aliases
-  USA: 'United States',
-  UK: 'United Kingdom',
-  Korea: 'South Korea',
-
-  // Fallbacks
-  Sconosciuto: 'Unknown',
-  Altro: 'Unknown',
-};
+const ALIASES = countryAliasesData as Record<string, string>;
 
 function getCoordinates(lat: number, lng: number, radius: number) {
   const phi = (90 - lat) * (Math.PI / 180);
@@ -99,7 +75,26 @@ function Pillar({
 function GlobeMesh({ data }: { data: { name: string; value: number }[] }) {
   const groupRef = useRef<THREE.Group>(null);
 
-  const maxValue = Math.max(...data.map((d) => d.value), 1);
+  // Merge duplicates that map to the same country name
+  const mergedDataMap: Record<string, number> = {};
+  data.forEach((item) => {
+    const rawName = item.name.trim();
+    const mappedName = ALIASES[rawName] || rawName;
+
+    // Filter out Unione Europea and generic Unknowns
+    if (mappedName === 'Unknown' || rawName === 'Unione Europea') return;
+
+    const coords = BASE_COORDINATES[mappedName];
+    if (!coords) return; // Skip if no valid coordinates exist
+
+    if (!mergedDataMap[mappedName]) {
+      mergedDataMap[mappedName] = 0;
+    }
+    mergedDataMap[mappedName] += item.value;
+  });
+
+  const mergedData = Object.entries(mergedDataMap).map(([name, value]) => ({ name, value }));
+  const maxValue = Math.max(...mergedData.map((d) => d.value), 1);
 
   // Load textures
   const topologyMap = useLoader(THREE.TextureLoader, '/earth-topology.png');
@@ -138,17 +133,14 @@ function GlobeMesh({ data }: { data: { name: string; value: number }[] }) {
       </Sphere>
 
       {/* Data Pillars */}
-      {data.map((item, i) => {
-        const rawName = item.name.trim();
-        const mappedName = ALIASES[rawName] || rawName;
-
-        // Try exact match in the new JSON database, fallback to unknown [0,0]
-        const coords = BASE_COORDINATES[mappedName] || [0, 0];
+      {mergedData.map((item, i) => {
+        const coords = BASE_COORDINATES[item.name];
+        if (!coords) return null;
 
         return (
           <Pillar
             key={i}
-            name={mappedName}
+            name={item.name}
             lat={coords[0]}
             lng={coords[1]}
             value={item.value}
