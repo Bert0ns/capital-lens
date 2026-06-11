@@ -32,7 +32,7 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
     'Overview' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'
   >('Overview');
 
-  const geoData = useMemo(() => aggregateBy(etfs, 'country').slice(0, 10), [etfs]);
+  const geoData = useMemo(() => aggregateBy(etfs, 'country'), [etfs]);
   const sectorData = useMemo(() => aggregateBy(etfs, 'sector').slice(0, 10), [etfs]);
   const currencyData = useMemo(() => aggregateBy(etfs, 'currency').slice(0, 5), [etfs]);
   const etfAllocationData = useMemo(() => {

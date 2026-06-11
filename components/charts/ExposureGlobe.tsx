@@ -5,23 +5,103 @@ import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Sphere, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
+import countryCoordsData from '../../public/static/countries_coordinates.json';
 
-function GlobeMesh() {
-  const meshRef = useRef<THREE.Mesh>(null);
+const BASE_COORDINATES = countryCoordsData as unknown as Record<string, [number, number]>;
+
+const ALIASES: Record<string, string> = {
+  // Italian Translations
+  'Stati Uniti': 'United States',
+  Giappone: 'Japan',
+  'Regno Unito': 'United Kingdom',
+  Francia: 'France',
+  Germania: 'Germany',
+  Svizzera: 'Switzerland',
+  Cina: 'China',
+  'Corea del Sud': 'South Korea',
+  Brasile: 'Brazil',
+  'Paesi Bassi': 'Netherlands',
+  Svezia: 'Sweden',
+  Italia: 'Italy',
+  Spagna: 'Spain',
+
+  // Missing / Extra common aliases
+  USA: 'United States',
+  UK: 'United Kingdom',
+  Korea: 'South Korea',
+
+  // Fallbacks
+  Sconosciuto: 'Unknown',
+  Altro: 'Unknown',
+};
+
+function getCoordinates(lat: number, lng: number, radius: number) {
+  const phi = (90 - lat) * (Math.PI / 180);
+  // Three.js maps textures such that we typically need a 180 degree offset for standard Equirectangular projections
+  // Using 180 aligns the prime meridian (Greenwich) with the correct coordinate axis
+  const theta = (lng + 180) * (Math.PI / 180);
+
+  // Spherical to Cartesian coordinates
+  const x = -(radius * Math.sin(phi) * Math.cos(theta));
+  const z = radius * Math.sin(phi) * Math.sin(theta);
+  const y = radius * Math.cos(phi);
+
+  return new THREE.Vector3(x, y, z);
+}
+
+function Pillar({
+  lat,
+  lng,
+  value,
+  maxValue,
+}: {
+  lat: number;
+  lng: number;
+  value: number;
+  maxValue: number;
+}) {
+  const radius = 2;
+  const pos = getCoordinates(lat, lng, radius);
+
+  const height = Math.max(0.05, (value / maxValue) * 1.5); // Max height is 1.5
+
+  const meshRef = useRef<THREE.Group>(null);
+
+  React.useEffect(() => {
+    if (meshRef.current) {
+      meshRef.current.lookAt(0, 0, 0);
+    }
+  }, [pos]);
+
+  return (
+    <group position={pos} ref={meshRef}>
+      {/* Rotate the cylinder so its Y axis points along the outward normal (-Z of the group) */}
+      <mesh position={[0, 0, -height / 2]} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.02, 0.02, height, 8]} />
+        <meshStandardMaterial color="#fcd34d" emissive="#f59e0b" emissiveIntensity={2} />
+      </mesh>
+    </group>
+  );
+}
+
+function GlobeMesh({ data }: { data: { name: string; value: number }[] }) {
+  const groupRef = useRef<THREE.Group>(null);
+
+  const maxValue = Math.max(...data.map((d) => d.value), 1);
 
   // Load textures
   const topologyMap = useLoader(THREE.TextureLoader, '/earth-topology.png');
 
-  // Gentle floating rotation
+  // Gentle floating rotation applied to the ENTIRE group (Globe + Pillars)
   useFrame((state, delta) => {
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * 0.15;
+    if (groupRef.current) {
+      groupRef.current.rotation.y += delta * 0.15;
     }
   });
 
   return (
-    <group>
-      <Sphere ref={meshRef} args={[2, 64, 64]}>
+    <group ref={groupRef}>
+      <Sphere args={[2, 64, 64]}>
         <meshStandardMaterial
           color="#1e293b" // Slate-800: sophisticated dark grey-blue ocean
           emissiveMap={topologyMap}
@@ -44,6 +124,19 @@ function GlobeMesh() {
           blending={THREE.AdditiveBlending}
         />
       </Sphere>
+
+      {/* Data Pillars */}
+      {data.map((item, i) => {
+        const rawName = item.name.trim();
+        const mappedName = ALIASES[rawName] || rawName;
+
+        // Try exact match in the new JSON database, fallback to unknown [0,0]
+        const coords = BASE_COORDINATES[mappedName] || [0, 0];
+
+        return (
+          <Pillar key={i} lat={coords[0]} lng={coords[1]} value={item.value} maxValue={maxValue} />
+        );
+      })}
     </group>
   );
 }
@@ -69,7 +162,7 @@ export function ExposureGlobe({ data }: { data: { name: string; value: number }[
 
             {/* Wrap the globe in Suspense while textures load */}
             <Suspense fallback={null}>
-              <GlobeMesh />
+              <GlobeMesh data={data} />
             </Suspense>
 
             <Stars
