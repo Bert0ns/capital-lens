@@ -10,6 +10,8 @@ A powerful, **100% client-side** web application designed to help retail investo
 
 ## ✨ Features
 
+- **🌍 Interactive 3D Visuals**: Explore your geographic exposure on a fully interactive, auto-rotating 3D globe powered by Three.js and React Three Fiber, featuring dynamic exposure pillars and bloom effects.
+- **🎨 Cyberpunk Aesthetic**: A deeply immersive, sharp-cornered UI with glowing neon gradients, polished dark mode, and seamless micro-animations.
 - **📊 True Underlying Exposure**: Input multiple ETFs and instantly view aggregated Geographic, Sector, and Currency allocations as if your portfolio was a single giant fund.
 - **🏦 Multi-Issuer Support**: Built-in CSV parsers for the world's leading asset managers: **iShares, Vanguard, Amundi, and Lyxor**.
 - **🎛️ Interactive Allocation**: Fluidly adjust your ETF weights using range sliders and watch your dashboard react and recompute instantaneously.
@@ -96,3 +98,11 @@ Contributions are welcome! If you'd like to add support for a new ETF Issuer (SP
 ## 📜 License
 
 This project is open-source and available under the [MIT License](LICENSE).
+
+---
+
+## 💡 Future Roadmap (Draft Ideas)
+
+1. **Holdings Search & Deep Dive:** A dedicated query engine to search for specific assets (e.g., "NVIDIA" or "Apple") across all parsed CSVs to reveal exact overlapping percentages.
+2. **3D Network Overlap Graph:** A 3D network visualization that reveals the overlapping concentration of top holdings across different ETFs. It visually demonstrates that multiple seemingly diverse ETFs might heavily concentrate your money in the same few companies.
+3. **Historical Backtesting Chart:** Integration with historical price APIs to chart a simulated backtested growth curve for your exact portfolio configuration over the last 1-5 years.
