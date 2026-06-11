@@ -4,6 +4,7 @@ import { getCsvParser } from '../lib/parsers';
 import { toast } from 'sonner';
 import { getItem, setItem } from '../lib/indexeddb';
 import { generateId } from '../lib/utils';
+import { useTranslation } from '../lib/i18n/LanguageContext';
 
 const STORAGE_KEY = 'etf_portfolio_data';
 
@@ -76,6 +77,7 @@ const DEFAULT_ETFS = [
 ];
 
 export function usePortfolio() {
+  const { t } = useTranslation();
   const [etfs, setEtfs] = useState<EtfConfig[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoadingDefaults, setIsLoadingDefaults] = useState(false);
@@ -114,20 +116,20 @@ export function usePortfolio() {
           }
         } catch (err) {
           console.error(`Failed to load default ETF: ${def.name}`, err);
-          toast.error('Failed to load default ETF', {
-            description: `${def.name} could not be loaded.`,
+          toast.error(t.notifications.loadDefaultsFailed, {
+            description: `${def.name} ${t.notifications.loadDefaultsFailedDesc}`,
           });
         }
       }
       setEtfs(loadedEtfs);
-      toast.success('Defaults Loaded', {
-        description: 'The default sample portfolio has been loaded.',
+      toast.success(t.notifications.defaultsLoaded, {
+        description: t.notifications.defaultsLoadedDesc,
       });
     } finally {
       setIsLoaded(true);
       setIsLoadingDefaults(false);
     }
-  }, []);
+  }, [t]);
 
   // Load from indexedDB or fallback to local storage or defaults on mount
   useEffect(() => {
@@ -172,8 +174,8 @@ export function usePortfolio() {
         }
       } catch (e) {
         console.error('Failed to load portfolio from storage', e);
-        toast.error('Storage Error', {
-          description: 'Failed to restore portfolio from local storage.',
+        toast.error(t.notifications.storageError, {
+          description: t.notifications.storageErrorDesc,
         });
       }
 

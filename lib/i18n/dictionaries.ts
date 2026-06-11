@@ -15,6 +15,14 @@ export const dictionaries = {
       en: 'English',
       it: 'Italiano',
     },
+    notifications: {
+      loadDefaultsFailed: 'Failed to load default ETF',
+      loadDefaultsFailedDesc: 'could not be loaded.',
+      defaultsLoaded: 'Defaults Loaded',
+      defaultsLoadedDesc: 'The default sample portfolio has been loaded.',
+      storageError: 'Storage Error',
+      storageErrorDesc: 'Failed to restore portfolio from local storage.',
+    },
     dashboard: {
       title: 'Dashboard',
       emptyState: 'No active ETFs to display.',
@@ -239,6 +247,14 @@ export const dictionaries = {
     languageSwitcher: {
       en: 'Inglese',
       it: 'Italiano',
+    },
+    notifications: {
+      loadDefaultsFailed: "Impossibile caricare l'ETF predefinito",
+      loadDefaultsFailedDesc: 'non può essere caricato.',
+      defaultsLoaded: 'Predefiniti Caricati',
+      defaultsLoadedDesc: 'Il portafoglio di esempio predefinito è stato caricato.',
+      storageError: 'Errore di Archiviazione',
+      storageErrorDesc: 'Impossibile ripristinare il portafoglio dalla memoria locale.',
     },
     dashboard: {
       title: 'Dashboard',
