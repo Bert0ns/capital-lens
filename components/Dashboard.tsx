@@ -122,7 +122,9 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
       <div className="md:hidden">
         <Select
           value={activeTab}
-          onValueChange={(val: string) => setActiveTab(val as typeof activeTab)}
+          onValueChange={(val) => {
+            if (val) setActiveTab(val as typeof activeTab);
+          }}
         >
           <SelectTrigger className="w-full text-base py-6 bg-muted/50 font-medium">
             <SelectValue placeholder="Select tab" />
