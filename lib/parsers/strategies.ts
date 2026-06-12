@@ -142,6 +142,22 @@ export class GenericCsvParser implements CsvParserStrategy {
     try {
       const data = await parseCustomCsv(file, this.config.headerKeywords);
 
+      const errors: string[] = [];
+      if (data.length > 0) {
+        const firstRow = data[0];
+        const missingFields: string[] = [];
+
+        Object.entries(this.config.fields).forEach(([fieldName, keys]) => {
+          if (!keys) return;
+          const found = keys.some((key) => firstRow[key] !== undefined);
+          if (!found) missingFields.push(fieldName);
+        });
+
+        if (missingFields.length > 0) {
+          errors.push(`Missing columns for: ${missingFields.join(', ')}`);
+        }
+      }
+
       const holdings: Holding[] = data
         .map((row: Record<string, unknown>) => {
           const getField = (keys?: string[]) => {
@@ -172,7 +188,7 @@ export class GenericCsvParser implements CsvParserStrategy {
         })
         .filter((h) => h.weight > 0 && h.ticker !== 'N/A' && h.name !== 'Unknown');
 
-      return { holdings, errors: [] };
+      return { holdings, errors };
     } catch (e: unknown) {
       return { holdings: [], errors: [e instanceof Error ? e.message : String(e)] };
     }

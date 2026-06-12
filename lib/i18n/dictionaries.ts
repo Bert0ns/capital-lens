@@ -90,6 +90,8 @@ export const dictionaries = {
       parseError: 'Parse Error',
       emptyFile: 'Empty File',
       emptyFileDesc: 'No valid holdings found in the CSV. Please check the file format.',
+      parsedWithWarnings: 'Parsed with warnings',
+      parsedWithWarningsDesc: 'The file was processed, but some data columns might be missing.',
       etfAdded: 'ETF Added',
     },
     fundDetailsTab: {
@@ -338,6 +340,9 @@ export const dictionaries = {
       emptyFile: 'File Vuoto',
       emptyFileDesc:
         'Nessuna partecipazione valida trovata nel CSV. Controlla il formato del file.',
+      parsedWithWarnings: 'Elaborato con avvisi',
+      parsedWithWarningsDesc:
+        'Il file è stato elaborato, ma alcune colonne di dati potrebbero mancare.',
       etfAdded: 'ETF Aggiunto',
     },
     fundDetailsTab: {

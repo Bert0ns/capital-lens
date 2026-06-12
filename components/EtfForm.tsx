@@ -92,6 +92,12 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
         return;
       }
 
+      if (result.errors.length > 0) {
+        toast.warning(t.etfForm.parsedWithWarnings, {
+          description: `${t.etfForm.parsedWithWarningsDesc} ${result.errors.join('. ')}`,
+        });
+      }
+
       const newEtf: EtfConfig = {
         id: generateId(),
         name,
