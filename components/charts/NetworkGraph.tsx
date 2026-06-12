@@ -6,9 +6,9 @@ import SpriteText from 'three-spritetext';
 import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { useTheme } from 'next-themes';
-import { EtfConfig } from 'ò/lib/types';
-import { generateNetworkData } from '../../lib/math';
-import { useTranslation } from '../../lib/i18n/LanguageContext';
+import { EtfConfig } from '@/lib/types';
+import { generateNetworkData } from '@/lib/math';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 interface NetworkGraphProps {
   etfs: EtfConfig[];
@@ -37,6 +37,11 @@ interface LinkObj {
   value?: number;
   [key: string]: unknown;
 }
+
+// Helper to reliably extract the ID from a link's source or target,
+// as ForceGraph3D mutates them from strings into object references
+const getLinkId = (node: string | NodeObj | undefined): string | undefined =>
+  typeof node === 'object' && node !== null ? node.id : (node as string | undefined);
 
 export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkGraphProps) {
   const { t } = useTranslation();
@@ -68,11 +73,9 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
     const etfMap: Record<string, Set<string>> = {};
     rawData.links.forEach((l) => {
       const link = l as unknown as LinkObj;
-      const targetId =
-        typeof link.target === 'object' && link.target !== null ? link.target.id : link.target;
-      const sourceId =
-        typeof link.source === 'object' && link.source !== null ? link.source.id : link.source;
-      if (typeof targetId === 'string' && typeof sourceId === 'string') {
+      const targetId = getLinkId(link.target);
+      const sourceId = getLinkId(link.source);
+      if (targetId && sourceId) {
         if (!etfMap[targetId]) etfMap[targetId] = new Set();
         etfMap[targetId].add(sourceId);
       }
@@ -82,22 +85,16 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
 
   const data = useMemo(() => {
     if (!overlapOnly) return rawData;
-    const filteredNodes = rawData.nodes.filter(
-      (n) =>
-        (n as NodeObj).group === 'etf' ||
-        ((n as NodeObj).id && sharedHoldings.has((n as NodeObj).id!))
-    );
+    const filteredNodes = rawData.nodes.filter((n) => {
+      const node = n as NodeObj;
+      return node.group === 'etf' || (node.id && sharedHoldings.has(node.id));
+    });
     const nodeIds = new Set(filteredNodes.map((n) => (n as NodeObj).id));
     const filteredLinks = rawData.links.filter((l) => {
-      const sourceId =
-        typeof (l as LinkObj).source === 'object'
-          ? ((l as LinkObj).source as NodeObj).id
-          : (l as LinkObj).source;
-      const targetId =
-        typeof (l as LinkObj).target === 'object'
-          ? ((l as LinkObj).target as NodeObj).id
-          : (l as LinkObj).target;
-      return nodeIds.has(sourceId!) && nodeIds.has(targetId!);
+      const link = l as LinkObj;
+      const sourceId = getLinkId(link.source);
+      const targetId = getLinkId(link.target);
+      return sourceId && targetId && nodeIds.has(sourceId) && nodeIds.has(targetId);
     });
     return { nodes: filteredNodes, links: filteredLinks };
   }, [rawData, overlapOnly, sharedHoldings]);
@@ -106,14 +103,9 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
     const map = new Map<string, Set<string>>();
     data.nodes.forEach((n) => map.set((n as NodeObj).id!, new Set()));
     data.links.forEach((l) => {
-      const sourceId =
-        typeof (l as LinkObj).source === 'object'
-          ? ((l as LinkObj).source as NodeObj).id
-          : (l as LinkObj).source;
-      const targetId =
-        typeof (l as LinkObj).target === 'object'
-          ? ((l as LinkObj).target as NodeObj).id
-          : (l as LinkObj).target;
+      const link = l as LinkObj;
+      const sourceId = getLinkId(link.source);
+      const targetId = getLinkId(link.target);
       if (sourceId && targetId) {
         map.get(sourceId)?.add(targetId);
         map.get(targetId)?.add(sourceId);
@@ -218,22 +210,23 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
 
   // Apply Bloom Post-Processing Effect safely
   useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let bloomPass: any = null;
+    const currentFg = fgRef.current;
 
     // Slight delay to ensure the WebGL renderer and composer are fully initialized
     const timer = setTimeout(() => {
-      if (fgRef.current) {
+      if (currentFg) {
         try {
-          const composer = fgRef.current.postProcessingComposer();
+          const composer = currentFg.postProcessingComposer();
           if (composer) {
             // Check if it already has a bloom pass (handles Hot-Reloads safely)
             const hasBloom = composer.passes.some(
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (p: any) => p.constructor.name === 'UnrealBloomPass'
             );
 
             // Only apply Bloom in Dark themes!
-            // In Light themes (White background), the background luminance is 1.0.
-            // The Bloom filter will blur the entire white background, causing a blinding glare.
             if (isDark && !hasBloom) {
               bloomPass = new UnrealBloomPass(
                 new THREE.Vector2(window.innerWidth, window.innerHeight),
@@ -244,8 +237,8 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
               composer.addPass(bloomPass);
             }
           }
-        } catch (e) {
-          console.warn('Bloom post-processing not supported or failed', e);
+        } catch {
+          // ignore
         }
       }
     }, 200);
@@ -253,32 +246,38 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
     return () => {
       clearTimeout(timer);
       if (bloomPass) {
-        if (fgRef.current) {
+        if (currentFg) {
           try {
-            const composer = fgRef.current.postProcessingComposer();
+            const composer = currentFg.postProcessingComposer();
             if (composer) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               composer.passes = composer.passes.filter((p: any) => p !== bloomPass);
             }
-          } catch (e) {}
+          } catch {
+            // ignore
+          }
         }
         // Dispose memory asynchronously to prevent crashing the active render loop during unmount
         setTimeout(() => {
           try {
             if (typeof bloomPass.dispose === 'function') bloomPass.dispose();
-          } catch (e) {}
+          } catch {
+            // ignore
+          }
         }, 500);
       }
     };
-  }, [resolvedTheme]);
+  }, [resolvedTheme, isDark]);
 
   // Apply even lighting so spheres bloom on all sides
   useEffect(() => {
     let ambientLight: THREE.AmbientLight | null = null;
+    const currentFg = fgRef.current;
+
     const timer = setTimeout(() => {
-      if (fgRef.current) {
-        const scene = fgRef.current.scene();
+      if (currentFg) {
+        const scene = currentFg.scene();
         // Add strong ambient light so the Lambert material is illuminated evenly.
-        // This prevents the "bloom only on one side" issue caused by directional lighting.
         ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
         scene.add(ambientLight);
       }
@@ -286,23 +285,24 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
 
     return () => {
       clearTimeout(timer);
-      if (fgRef.current && ambientLight) {
-        fgRef.current.scene().remove(ambientLight);
+      if (currentFg && ambientLight) {
+        currentFg.scene().remove(ambientLight);
       }
     };
   }, []);
 
-  // Node and link colors MUST adapt to the theme, otherwise the white links from the Dark theme
-  // will be completely invisible against the Light theme backgrounds!
+  // Custom colors for nodes
+  // In Light themes, we use vibrant colors (instead of black/dark) so they emit enough light to bloom in WebGL,
+  // while still being dark enough to be visible against the white CSS background.
   const etfColor = isDark ? '#22d3ee' : '#3b82f6'; // Cyan vs Blue
   const holdingColor = isDark ? '#f472b6' : '#ec4899'; // Pink-400 vs Pink-500
   const defaultLinkColor = isExtremeVolume
     ? isDark
       ? '#333333'
-      : '#94a3b8' // Slate-400
+      : '#94a3b8' // Slate-400 (bright enough to bloom, dark enough for white bg)
     : isDark
       ? 'rgba(255, 255, 255, 0.4)'
-      : 'rgba(99, 102, 241, 0.4)'; // Indigo links for light themes
+      : 'rgba(99, 102, 241, 0.4)'; // Indigo-500 links instead of black!
 
   if (!data || data.nodes.length === 0) return null;
 
@@ -321,7 +321,7 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
         onNodeHover={(node) => setHoverNode((node as NodeObj) || null)}
         nodeLabel={(node) => {
           const n = node as NodeObj;
-          let html = `<div style="background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; color: white; font-family: sans-serif; pointer-events: none;">`;
+          let html = `<div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 8px; color: white; font-family: sans-serif; pointer-events: none;">`;
           html += `<div style="font-weight: bold; margin-bottom: 4px;">${n.name || n.id}</div>`;
           if (n.group === 'holding' && n.val !== undefined) {
             html += `<div style="font-size: 12px; opacity: 0.8;">Weight in portfolio: <strong style="color: #f472b6;">${n.val.toFixed(2)}%</strong></div>`;
