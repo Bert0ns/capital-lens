@@ -4,8 +4,9 @@ import React, { useRef, useEffect, useState, useMemo } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import SpriteText from 'three-spritetext';
 import * as THREE from 'three';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { useTheme } from 'next-themes';
-import { EtfConfig } from '../../lib/types';
+import { EtfConfig } from 'ò/lib/types';
 import { generateNetworkData } from '../../lib/math';
 import { useTranslation } from '../../lib/i18n/LanguageContext';
 
@@ -49,6 +50,17 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
 
   const isExtremeVolume = limit[0] > 1000;
   const isHighVolume = limit[0] > 300;
+
+  // Set colors based on current theme early so effects can use them
+  const isCyberpunk = resolvedTheme === 'theme-cyberpunk';
+  const isCartoon = resolvedTheme === 'theme-cartoon';
+  const isProfessional = resolvedTheme === 'theme-professional';
+
+  const isDark = isCyberpunk;
+
+  let bgColor = '#09090b'; // Cyberpunk dark
+  if (isCartoon) bgColor = '#fdf6e3'; // Cartoon warm cream
+  if (isProfessional) bgColor = '#fcfcfc'; // Professional clean white
 
   const rawData = useMemo(() => generateNetworkData(etfs, limit[0]), [etfs, limit]);
 
@@ -204,19 +216,93 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
     return () => clearTimeout(timer);
   }, [data, isHighVolume, isExtremeVolume, overlapOnly]);
 
-  // Set colors based on current theme
-  const isDark = resolvedTheme === 'theme-cyberpunk';
+  // Apply Bloom Post-Processing Effect safely
+  useEffect(() => {
+    let bloomPass: any = null;
 
-  // Custom colors for nodes
-  const etfColor = isDark ? '#22d3ee' : '#2563eb'; // Cyan vs Blue
-  const holdingColor = isDark ? '#f472b6' : '#db2777'; // Pink
+    // Slight delay to ensure the WebGL renderer and composer are fully initialized
+    const timer = setTimeout(() => {
+      if (fgRef.current) {
+        try {
+          const composer = fgRef.current.postProcessingComposer();
+          if (composer) {
+            // Check if it already has a bloom pass (handles Hot-Reloads safely)
+            const hasBloom = composer.passes.some(
+              (p: any) => p.constructor.name === 'UnrealBloomPass'
+            );
+
+            // Only apply Bloom in Dark themes!
+            // In Light themes (White background), the background luminance is 1.0.
+            // The Bloom filter will blur the entire white background, causing a blinding glare.
+            if (isDark && !hasBloom) {
+              bloomPass = new UnrealBloomPass(
+                new THREE.Vector2(window.innerWidth, window.innerHeight),
+                0.05, // Extremely faint halo
+                0.4, // Uniform radius
+                0.1 // Low threshold
+              );
+              composer.addPass(bloomPass);
+            }
+          }
+        } catch (e) {
+          console.warn('Bloom post-processing not supported or failed', e);
+        }
+      }
+    }, 200);
+
+    return () => {
+      clearTimeout(timer);
+      if (bloomPass) {
+        if (fgRef.current) {
+          try {
+            const composer = fgRef.current.postProcessingComposer();
+            if (composer) {
+              composer.passes = composer.passes.filter((p: any) => p !== bloomPass);
+            }
+          } catch (e) {}
+        }
+        // Dispose memory asynchronously to prevent crashing the active render loop during unmount
+        setTimeout(() => {
+          try {
+            if (typeof bloomPass.dispose === 'function') bloomPass.dispose();
+          } catch (e) {}
+        }, 500);
+      }
+    };
+  }, [resolvedTheme]);
+
+  // Apply even lighting so spheres bloom on all sides
+  useEffect(() => {
+    let ambientLight: THREE.AmbientLight | null = null;
+    const timer = setTimeout(() => {
+      if (fgRef.current) {
+        const scene = fgRef.current.scene();
+        // Add strong ambient light so the Lambert material is illuminated evenly.
+        // This prevents the "bloom only on one side" issue caused by directional lighting.
+        ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
+        scene.add(ambientLight);
+      }
+    }, 200);
+
+    return () => {
+      clearTimeout(timer);
+      if (fgRef.current && ambientLight) {
+        fgRef.current.scene().remove(ambientLight);
+      }
+    };
+  }, []);
+
+  // Node and link colors MUST adapt to the theme, otherwise the white links from the Dark theme
+  // will be completely invisible against the Light theme backgrounds!
+  const etfColor = isDark ? '#22d3ee' : '#3b82f6'; // Cyan vs Blue
+  const holdingColor = isDark ? '#f472b6' : '#ec4899'; // Pink-400 vs Pink-500
   const defaultLinkColor = isExtremeVolume
     ? isDark
       ? '#333333'
-      : '#e5e7eb' // Solid colors remove expensive GPU alpha blending
+      : '#94a3b8' // Slate-400
     : isDark
       ? 'rgba(255, 255, 255, 0.4)'
-      : 'rgba(0, 0, 0, 0.4)';
+      : 'rgba(99, 102, 241, 0.4)'; // Indigo links for light themes
 
   if (!data || data.nodes.length === 0) return null;
 
@@ -365,7 +451,7 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
           Math.max(1.5, Math.sqrt((link as LinkObj).value || 0))
         }
         linkDirectionalParticleSpeed={(link) => ((link as LinkObj).value || 0) * 0.0005 + 0.005}
-        backgroundColor="rgba(0,0,0,0)" // Transparent to let tailwind bg show
+        backgroundColor={bgColor} // Solid color derived exactly from the CSS theme
         showNavInfo={false}
       />
       <div className="absolute top-4 left-4 pointer-events-none bg-background/90 backdrop-blur-md px-4 py-3 rounded-xl border border-border shadow-lg flex flex-col gap-3 min-w-70">
