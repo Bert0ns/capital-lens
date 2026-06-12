@@ -119,3 +119,5 @@ This project is open-source and available under the [MIT License](LICENSE).
 ## 💡 Future Roadmap (Draft Ideas)
 
 1. **Historical Backtesting Chart:** Integration with historical price APIs to chart a simulated backtested growth curve for your exact portfolio configuration over the last 1-5 years.
+2. **Correlation Matrix Heatmap:** A visual heatmap matrix that calculates how closely correlated the ETFs are to one another, helping flag redundancies and ensure true diversification.
+3. **Deep Dive & Geographic Search:** A dedicated feature that allows users to isolate and analyze the full statistics of a single ETF at a time, plus the ability to search by specific countries or geographic areas to see exact exposure and which ETFs contribute to it.
