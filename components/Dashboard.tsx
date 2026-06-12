@@ -155,7 +155,7 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
       </div>
 
       {/* Tab Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-in slide-in-from-bottom-2 fade-in duration-500">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 animate-in slide-in-from-bottom-2 fade-in duration-500">
         {activeTab === 'Overview' && (
           <OverviewTab
             topHoldings={topHoldings}
@@ -200,15 +200,12 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
           <div
             className={`${isFullscreen ? 'fixed inset-0 z-50 p-4 bg-background' : 'lg:col-span-2'}`}
           >
-            <div className="flex justify-end mb-2">
-              <button
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                className="p-2 hover:bg-muted rounded-full transition-colors"
-              >
-                {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
-              </button>
-            </div>
-            <VisualsTab etfs={etfs} geoData={geoData} />
+            <VisualsTab
+              etfs={etfs}
+              geoData={geoData}
+              isFullscreen={isFullscreen}
+              onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+            />
           </div>
         )}
       </div>

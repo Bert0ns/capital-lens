@@ -198,6 +198,8 @@ export const dictionaries = {
     analyzer: {
       parsingDefaults: 'Parsing Default Nodes...',
       initializing: 'Initializing Workspace...',
+      hidePortfolioSetup: 'Hide Portfolio Setup',
+      managePortfolio: 'Manage Portfolio',
     },
     portfolioSliders: {
       removeEtf: 'Remove ETF',
@@ -235,6 +237,8 @@ export const dictionaries = {
       overlappingHoldings: 'Overlapping Holdings',
       networkLegendDesc:
         'Lines pull overlapping companies towards the center. Thicker lines and faster particles indicate heavier concentration weight.',
+      fullscreen: 'Fullscreen',
+      exitFullscreen: 'Exit Fullscreen',
     },
   },
   it: {
@@ -440,6 +444,8 @@ export const dictionaries = {
     analyzer: {
       parsingDefaults: 'Analisi dei Nodi Predefiniti...',
       initializing: 'Inizializzazione Workspace...',
+      hidePortfolioSetup: 'Nascondi Setup Portafoglio',
+      managePortfolio: 'Gestisci Portafoglio',
     },
     portfolioSliders: {
       removeEtf: 'Rimuovi ETF',
@@ -477,6 +483,8 @@ export const dictionaries = {
       overlappingHoldings: 'Partecipazioni Sovrapposte',
       networkLegendDesc:
         'Le linee attirano verso il centro le società sovrapposte. Linee più spesse e particelle più veloci indicano un peso di concentrazione maggiore.',
+      fullscreen: 'Schermo Intero',
+      exitFullscreen: 'Esci da Schermo Intero',
     },
   },
 };
