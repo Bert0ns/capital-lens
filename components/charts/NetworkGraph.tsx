@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import SpriteText from 'three-spritetext';
+import * as THREE from 'three';
 import { useTheme } from 'next-themes';
 import { EtfConfig } from '../../lib/types';
 import { generateNetworkData } from '../../lib/math';
@@ -12,6 +13,7 @@ interface NetworkGraphProps {
   etfs: EtfConfig[];
   limit: number[];
   livePhysics: boolean;
+  overlapOnly?: boolean;
 }
 
 interface NodeObj {
@@ -35,13 +37,14 @@ interface LinkObj {
   [key: string]: unknown;
 }
 
-export function NetworkGraph({ etfs, limit, livePhysics }: NetworkGraphProps) {
+export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkGraphProps) {
   const { t } = useTranslation();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fgRef = useRef<any>(null);
   const { resolvedTheme } = useTheme();
   const [dimensions, setDimensions] = useState({ width: 800, height: 450 });
   const [isSettling, setIsSettling] = useState(true);
+  const [hoverNode, setHoverNode] = useState<NodeObj | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const isExtremeVolume = limit[0] > 1000;
@@ -65,7 +68,47 @@ export function NetworkGraph({ etfs, limit, livePhysics }: NetworkGraphProps) {
     return new Set(Object.keys(etfMap).filter((k) => etfMap[k].size > 1));
   }, [rawData.links]);
 
-  const data = rawData;
+  const data = useMemo(() => {
+    if (!overlapOnly) return rawData;
+    const filteredNodes = rawData.nodes.filter(
+      (n) =>
+        (n as NodeObj).group === 'etf' ||
+        ((n as NodeObj).id && sharedHoldings.has((n as NodeObj).id!))
+    );
+    const nodeIds = new Set(filteredNodes.map((n) => (n as NodeObj).id));
+    const filteredLinks = rawData.links.filter((l) => {
+      const sourceId =
+        typeof (l as LinkObj).source === 'object'
+          ? ((l as LinkObj).source as NodeObj).id
+          : (l as LinkObj).source;
+      const targetId =
+        typeof (l as LinkObj).target === 'object'
+          ? ((l as LinkObj).target as NodeObj).id
+          : (l as LinkObj).target;
+      return nodeIds.has(sourceId!) && nodeIds.has(targetId!);
+    });
+    return { nodes: filteredNodes, links: filteredLinks };
+  }, [rawData, overlapOnly, sharedHoldings]);
+
+  const neighbors = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    data.nodes.forEach((n) => map.set((n as NodeObj).id!, new Set()));
+    data.links.forEach((l) => {
+      const sourceId =
+        typeof (l as LinkObj).source === 'object'
+          ? ((l as LinkObj).source as NodeObj).id
+          : (l as LinkObj).source;
+      const targetId =
+        typeof (l as LinkObj).target === 'object'
+          ? ((l as LinkObj).target as NodeObj).id
+          : (l as LinkObj).target;
+      if (sourceId && targetId) {
+        map.get(sourceId)?.add(targetId);
+        map.get(targetId)?.add(sourceId);
+      }
+    });
+    return map;
+  }, [data]);
 
   // Whenever the data changes (e.g. slider moves), the physics engine will wake up to calculate the new graph
   useEffect(() => {
@@ -108,7 +151,7 @@ export function NetworkGraph({ etfs, limit, livePhysics }: NetworkGraphProps) {
     }
   }, [livePhysics]);
 
-  // Tweak physics engine dynamically based on node count
+  // Tweak physics engine dynamically based on node count and display mode
   useEffect(() => {
     // Delay tweaks slightly to ensure internal d3ForceLayout is fully instantiated
     const timer = setTimeout(() => {
@@ -119,19 +162,31 @@ export function NetworkGraph({ etfs, limit, livePhysics }: NetworkGraphProps) {
           if (centerForce) centerForce.strength(0);
 
           // Balance magnetic repulsion so holdings form a cloud but don't explode
+          // If overlapOnly is active, there are fewer nodes, so we need way more repulsion to prevent collapse
           const chargeForce = fgRef.current.d3Force('charge');
-          if (chargeForce) chargeForce.strength(isExtremeVolume ? -40 : isHighVolume ? -60 : -100);
+          if (chargeForce)
+            chargeForce.strength(
+              overlapOnly ? -300 : isExtremeVolume ? -40 : isHighVolume ? -60 : -100
+            );
 
           // Give the springs enough distance so holdings don't clump directly inside the ETF sphere
           const linkForce = fgRef.current.d3Force('link');
-          if (linkForce) linkForce.distance(isExtremeVolume ? 50 : isHighVolume ? 70 : 90);
+          if (linkForce)
+            linkForce.distance(overlapOnly ? 150 : isExtremeVolume ? 50 : isHighVolume ? 70 : 90);
 
           // Custom gravity force: pulls disconnected ETFs and flying nodes back to the dead center (0,0,0)
           fgRef.current.d3Force('gravity', (alpha: number) => {
             data.nodes.forEach((n) => {
               const node = n as unknown as NodeObj;
               // ETFs get pulled strongly to the center, holdings get pulled gently
-              const pullStrength = node.group === 'etf' ? 0.08 : 0.01;
+              // When overlapOnly is active, reduce gravity to let the graph breathe
+              const pullStrength = overlapOnly
+                ? node.group === 'etf'
+                  ? 0.02
+                  : 0.005
+                : node.group === 'etf'
+                  ? 0.08
+                  : 0.01;
               if (node.vx !== undefined && node.x !== undefined)
                 node.vx -= node.x * alpha * pullStrength;
               if (node.vy !== undefined && node.y !== undefined)
@@ -147,7 +202,7 @@ export function NetworkGraph({ etfs, limit, livePhysics }: NetworkGraphProps) {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [data, isHighVolume, isExtremeVolume]);
+  }, [data, isHighVolume, isExtremeVolume, overlapOnly]);
 
   // Set colors based on current theme
   const isDark = resolvedTheme === 'theme-cyberpunk';
@@ -155,7 +210,7 @@ export function NetworkGraph({ etfs, limit, livePhysics }: NetworkGraphProps) {
   // Custom colors for nodes
   const etfColor = isDark ? '#22d3ee' : '#2563eb'; // Cyan vs Blue
   const holdingColor = isDark ? '#f472b6' : '#db2777'; // Pink
-  const linkColor = isExtremeVolume
+  const defaultLinkColor = isExtremeVolume
     ? isDark
       ? '#333333'
       : '#e5e7eb' // Solid colors remove expensive GPU alpha blending
@@ -177,9 +232,32 @@ export function NetworkGraph({ etfs, limit, livePhysics }: NetworkGraphProps) {
         graphData={data}
         cooldownTicks={livePhysics ? Infinity : 100}
         enableNodeDrag={livePhysics}
-        nodeLabel="name"
+        onNodeHover={(node) => setHoverNode((node as NodeObj) || null)}
+        nodeLabel={(node) => {
+          const n = node as NodeObj;
+          let html = `<div style="background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; color: white; font-family: sans-serif; pointer-events: none;">`;
+          html += `<div style="font-weight: bold; margin-bottom: 4px;">${n.name || n.id}</div>`;
+          if (n.group === 'holding' && n.val !== undefined) {
+            html += `<div style="font-size: 12px; opacity: 0.8;">Weight in portfolio: <strong style="color: #f472b6;">${n.val.toFixed(2)}%</strong></div>`;
+          }
+          if (n.group === 'etf' && n.val !== undefined) {
+            html += `<div style="font-size: 12px; opacity: 0.8;">Total ETF Weight: <strong style="color: #22d3ee;">${n.val.toFixed(2)}%</strong></div>`;
+          }
+          html += `</div>`;
+          return html;
+        }}
         nodeAutoColorBy="group"
-        nodeColor={(node) => ((node as NodeObj).group === 'etf' ? etfColor : holdingColor)}
+        nodeColor={(node) => {
+          const n = node as NodeObj;
+          const isHovered = hoverNode === n;
+          const isNeighbor = hoverNode && n.id && neighbors.get(hoverNode.id!)?.has(n.id!);
+          const color = n.group === 'etf' ? etfColor : holdingColor;
+
+          if (hoverNode && !isHovered && !isNeighbor) {
+            return isDark ? 'rgba(50,50,50,0.3)' : 'rgba(200,200,200,0.3)';
+          }
+          return color;
+        }}
         nodeVal={(node) => {
           const n = node as NodeObj;
           // We want the sphere's visual RADIUS to scale based on the percentage of the total portfolio (node.val).
@@ -215,8 +293,16 @@ export function NetworkGraph({ etfs, limit, livePhysics }: NetworkGraphProps) {
         nodeThreeObject={
           ((node: object) => {
             const n = node as NodeObj;
+
+            // Hover logic: hide unrelated labels
+            const isHovered = hoverNode === n;
+            const isNeighbor = hoverNode && n.id && neighbors.get(hoverNode.id!)?.has(n.id!);
+            if (hoverNode && !isHovered && !isNeighbor) return null;
+
             // Render labels only for ETFs or shared holdings
             if (n.name && (n.group === 'etf' || (n.id && sharedHoldings.has(n.id)))) {
+              // LOD: we could check camera distance here if we wanted, but for now we'll
+              // just let the user hover to see rich tooltips, and keep sprites for major nodes.
               const sprite = new SpriteText(n.name);
               sprite.color = isDark ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.9)';
 
@@ -252,8 +338,20 @@ export function NetworkGraph({ etfs, limit, livePhysics }: NetworkGraphProps) {
           return true;
         }}
         linkWidth={(link) => Math.max(0.5, Math.sqrt((link as LinkObj).value || 0) * 1.5)}
-        linkColor={() => linkColor}
-        linkOpacity={isExtremeVolume ? 1 : 0.4}
+        linkColor={(link) => {
+          const l = link as LinkObj;
+          const sourceId = typeof l.source === 'object' ? (l.source as NodeObj).id : l.source;
+          const targetId = typeof l.target === 'object' ? (l.target as NodeObj).id : l.target;
+
+          if (hoverNode) {
+            if (sourceId === hoverNode.id || targetId === hoverNode.id) {
+              return isDark ? '#ffffff' : '#000000'; // High contrast for focused links
+            }
+            return 'rgba(0,0,0,0.02)'; // Fade out other links
+          }
+          return defaultLinkColor;
+        }}
+        linkOpacity={hoverNode ? 1 : isExtremeVolume ? 1 : 0.4}
         linkDirectionalParticles={(link) => {
           const l = link as LinkObj;
           if (isHighVolume) {

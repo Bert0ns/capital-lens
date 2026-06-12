@@ -35,6 +35,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
   const [active3DVisual, setActive3DVisual] = useState<'Globe' | 'Network'>('Globe');
   const [networkLimit, setNetworkLimit] = useState<number[]>([100]);
   const [networkLivePhysics, setNetworkLivePhysics] = useState(false);
+  const [networkOverlapOnly, setNetworkOverlapOnly] = useState(false);
 
   const maxHoldings = useMemo(() => {
     const activeEtfs = etfs.filter((e) => e.globalWeight > 0);
@@ -97,6 +98,24 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
                 className="py-2"
               />
             </div>
+            <div className="flex flex-col gap-2 min-w-[140px]">
+              <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
+                Display Mode
+              </Label>
+              <div className="flex items-center space-x-2 mt-1">
+                <Switch
+                  id="overlap-mode"
+                  checked={networkOverlapOnly}
+                  onCheckedChange={setNetworkOverlapOnly}
+                />
+                <Label
+                  htmlFor="overlap-mode"
+                  className="text-xs text-muted-foreground cursor-pointer font-medium"
+                >
+                  Overlap Only
+                </Label>
+              </div>
+            </div>
             <div className="flex flex-col gap-2 min-w-37.5">
               <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
                 {t.overviewTab.concentrationPhysics}
@@ -116,7 +135,12 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
               </div>
             </div>
           </div>
-          <NetworkGraph etfs={etfs} limit={networkLimit} livePhysics={networkLivePhysics} />
+          <NetworkGraph
+            etfs={etfs}
+            limit={networkLimit}
+            livePhysics={networkLivePhysics}
+            overlapOnly={networkOverlapOnly}
+          />
         </div>
       )}
     </div>
