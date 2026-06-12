@@ -230,9 +230,9 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
             if (isDark && !hasBloom) {
               bloomPass = new UnrealBloomPass(
                 new THREE.Vector2(window.innerWidth, window.innerHeight),
-                0.05, // Extremely faint halo
+                0.02, // Extremely faint halo
                 0.4, // Uniform radius
-                0.1 // Low threshold
+                0.2 // Low threshold
               );
               composer.addPass(bloomPass);
             }
@@ -309,7 +309,7 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
   return (
     <div
       ref={containerRef}
-      className="w-full h-[600px] relative rounded-xl overflow-hidden bg-background"
+      className="w-full h-150 relative rounded-xl overflow-hidden bg-background"
     >
       <ForceGraph3D
         ref={fgRef}
@@ -324,10 +324,10 @@ export function NetworkGraph({ etfs, limit, livePhysics, overlapOnly }: NetworkG
           let html = `<div style="background: rgba(0,0,0,0.8); padding: 8px; border-radius: 8px; color: white; font-family: sans-serif; pointer-events: none;">`;
           html += `<div style="font-weight: bold; margin-bottom: 4px;">${n.name || n.id}</div>`;
           if (n.group === 'holding' && n.val !== undefined) {
-            html += `<div style="font-size: 12px; opacity: 0.8;">Weight in portfolio: <strong style="color: #f472b6;">${n.val.toFixed(2)}%</strong></div>`;
+            html += `<div style="font-size: 12px; opacity: 0.8;">${t.threeDVisuals.weightInPortfolio} <strong style="color: #f472b6;">${n.val.toFixed(2)}%</strong></div>`;
           }
           if (n.group === 'etf' && n.val !== undefined) {
-            html += `<div style="font-size: 12px; opacity: 0.8;">Total ETF Weight: <strong style="color: #22d3ee;">${n.val.toFixed(2)}%</strong></div>`;
+            html += `<div style="font-size: 12px; opacity: 0.8;">${t.threeDVisuals.totalEtfWeight} <strong style="color: #22d3ee;">${n.val.toFixed(2)}%</strong></div>`;
           }
           html += `</div>`;
           return html;

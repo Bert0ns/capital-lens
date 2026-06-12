@@ -86,7 +86,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
                   {t.overviewTab.topHoldingsRendered}
                 </Label>
                 <span className="text-xs font-mono bg-primary/10 text-primary px-2 py-0.5 rounded-full">
-                  {networkLimit[0] >= maxHoldings ? 'ALL' : networkLimit[0]}
+                  {networkLimit[0] >= maxHoldings ? t.threeDVisuals.all : networkLimit[0]}
                 </span>
               </div>
               <Slider
@@ -100,7 +100,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
             </div>
             <div className="flex flex-col gap-2 min-w-[140px]">
               <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
-                Display Mode
+                {t.threeDVisuals.displayMode}
               </Label>
               <div className="flex items-center space-x-2 mt-1">
                 <Switch
@@ -112,7 +112,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
                   htmlFor="overlap-mode"
                   className="text-xs text-muted-foreground cursor-pointer font-medium"
                 >
-                  Overlap Only
+                  {t.threeDVisuals.overlapOnly}
                 </Label>
               </div>
             </div>
