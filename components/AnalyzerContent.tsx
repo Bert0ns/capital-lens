@@ -1,13 +1,12 @@
 'use client';
 
 import { usePortfolio } from '@/hooks/usePortfolio';
-import EtfForm from '@/components/EtfForm';
+
 import PortfolioSliders from '@/components/PortfolioSliders';
 import Dashboard from '@/components/Dashboard';
 import { useState } from 'react';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 
 export default function AnalyzerContent() {
   const { t } = useTranslation();

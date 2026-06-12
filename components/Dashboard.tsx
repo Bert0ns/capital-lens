@@ -4,9 +4,7 @@ import React, { useState } from 'react';
 import { EtfConfig } from '../lib/types';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { Card, CardContent } from './ui/card';
-import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Maximize2, Minimize2 } from 'lucide-react';
 
 // Extracted Tab Components
 import { OverviewTab } from './dashboard/OverviewTab';
@@ -16,7 +14,6 @@ import { DeepDiveTab } from './dashboard/DeepDiveTab';
 
 // Other features
 import { SavingsPlanCalculator } from './SavingsPlanCalculator';
-import dynamic from 'next/dynamic';
 
 import { VisualsTab } from './dashboard/VisualsTab';
 
@@ -29,8 +26,6 @@ interface DashboardProps {
 
 export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
   const { t } = useTranslation();
-  const [networkLimit, setNetworkLimit] = useState<number[]>([100]);
-  const [networkLivePhysics, setNetworkLivePhysics] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [activeTab, setActiveTab] = useState<
     'Overview' | 'Deep Dive' | '3D Visuals' | 'Fund Details' | 'Risk Analysis' | 'Savings Plan'
@@ -125,7 +120,10 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
 
       {/* Tabs Navigator - Dropdown on Mobile, Tabs on Desktop */}
       <div className="md:hidden">
-        <Select value={activeTab} onValueChange={(val: any) => setActiveTab(val)}>
+        <Select
+          value={activeTab}
+          onValueChange={(val: string) => setActiveTab(val as typeof activeTab)}
+        >
           <SelectTrigger className="w-full text-base py-6 bg-muted/50 font-medium">
             <SelectValue placeholder="Select tab" />
           </SelectTrigger>

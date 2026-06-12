@@ -4,7 +4,7 @@ import React from 'react';
 import { EtfConfig } from '../lib/types';
 import { Trash2, RotateCcw } from 'lucide-react';
 
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { Slider } from './ui/slider';
 import { Button } from './ui/button';
 import { useTranslation } from '../lib/i18n/LanguageContext';
