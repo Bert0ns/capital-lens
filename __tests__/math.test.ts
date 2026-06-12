@@ -1,4 +1,10 @@
-import { aggregateBy, calculateAverageTer, aggregateTopHoldings } from '../lib/math';
+import {
+  aggregateBy,
+  calculateAverageTer,
+  aggregateTopHoldings,
+  searchHoldings,
+  generateNetworkData,
+} from '../lib/math';
 import { EtfConfig } from '../lib/types';
 
 describe('Math Utilities', () => {
@@ -316,6 +322,110 @@ describe('Math Utilities', () => {
         { ...mockEtfs[1], globalWeight: 50, ter: 0 },
       ];
       expect(calculateAverageTer(zeroTerEtfs)).toBe(0);
+    });
+  });
+
+  describe('searchHoldings', () => {
+    it('returns empty array if query is empty or whitespace', () => {
+      expect(searchHoldings(mockEtfs, '')).toEqual([]);
+      expect(searchHoldings(mockEtfs, '   ')).toEqual([]);
+    });
+
+    it('returns empty array if no matching holding is found', () => {
+      expect(searchHoldings(mockEtfs, 'NonExistent')).toEqual([]);
+    });
+
+    it('finds holding by ticker (case insensitive) and aggregates across ETFs', () => {
+      // AAPL is in ETF 1 (10%) and ETF 2 (4%). Both ETFs have 50% global weight.
+      const results = searchHoldings(mockEtfs, 'aapl');
+      expect(results.length).toBe(1);
+      expect(results[0].ticker).toBe('AAPL');
+      expect(results[0].name).toBe('Apple');
+      expect(results[0].totalWeight).toBeCloseTo(7); // (10 * 0.5) + (4 * 0.5) = 7
+      expect(results[0].breakdown.length).toBe(2);
+      expect(results[0].breakdown[0].etfId).toBe('1');
+      expect(results[0].breakdown[0].contribution).toBeCloseTo(5);
+    });
+
+    it('finds holding by name and ignores ETFs with 0 global weight', () => {
+      const customEtfs: EtfConfig[] = [
+        ...mockEtfs,
+        {
+          ...mockEtfs[0],
+          id: '3',
+          globalWeight: 0,
+          holdings: [
+            {
+              name: 'Apple',
+              ticker: 'AAPL',
+              weight: 50,
+              sector: 'IT',
+              country: 'US',
+              currency: 'USD',
+            },
+          ],
+        },
+      ];
+      // Search for "apple"
+      const results = searchHoldings(customEtfs, 'Apple');
+      expect(results.length).toBe(1);
+      // The 3rd ETF should be ignored, so the result should still be exactly 7
+      expect(results[0].totalWeight).toBeCloseTo(7);
+      expect(results[0].breakdown.length).toBe(2);
+    });
+
+    it('handles holding with N/A ticker by falling back to name', () => {
+      const customEtfs: EtfConfig[] = [
+        {
+          ...mockEtfs[0],
+          globalWeight: 100,
+          holdings: [
+            {
+              name: 'Unknown Corp',
+              ticker: 'N/A',
+              weight: 10,
+              sector: 'IT',
+              country: 'US',
+              currency: 'USD',
+            },
+          ],
+        },
+      ];
+      const results = searchHoldings(customEtfs, 'unknown');
+      expect(results.length).toBe(1);
+      expect(results[0].ticker).toBe('N/A');
+      expect(results[0].name).toBe('Unknown Corp');
+    });
+  });
+
+  describe('generateNetworkData', () => {
+    it('generates nodes for ETFs and top holdings, and creates links', () => {
+      const limit = 2;
+      const data = generateNetworkData(mockEtfs, limit);
+
+      // ETFs + up to 2 top holdings. mockEtfs has 2 ETFs.
+      // Top 2 holdings: AAPL (7%), NESN (3% - 6*0.5), MSFT (2.5% - 5*0.5) => Top 2 are AAPL and NESN.
+      expect(data.nodes.filter((n) => n.group === 'etf').length).toBe(2);
+      expect(data.nodes.filter((n) => n.group === 'holding').length).toBe(2); // AAPL and NESN
+
+      // Check links: ETF1 -> AAPL, ETF2 -> AAPL, ETF2 -> NESN. (ETF1 -> MSFT is omitted because MSFT is not top 2)
+      expect(data.links.length).toBe(3);
+
+      const etf1Links = data.links.filter((l) => l.source === '1');
+      expect(etf1Links.length).toBe(1);
+      expect(etf1Links[0].target).toBe('AAPL'); // Uses key which is ticker 'AAPL'
+
+      const etf2Links = data.links.filter((l) => l.source === '2');
+      expect(etf2Links.length).toBe(2);
+      expect(etf2Links.some((l) => l.target === 'AAPL')).toBe(true);
+      expect(etf2Links.some((l) => l.target === 'NESN')).toBe(true);
+    });
+
+    it('ignores ETFs with global weight 0', () => {
+      const zeroWeightEtfs = mockEtfs.map((e) => ({ ...e, globalWeight: 0 }));
+      const data = generateNetworkData(zeroWeightEtfs, 10);
+      expect(data.nodes.length).toBe(0);
+      expect(data.links.length).toBe(0);
     });
   });
 });

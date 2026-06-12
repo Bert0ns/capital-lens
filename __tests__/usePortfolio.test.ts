@@ -9,6 +9,13 @@ jest.mock('../lib/indexeddb', () => ({
   removeItem: jest.fn(() => Promise.resolve()),
 }));
 
+jest.mock('sonner', () => ({
+  toast: {
+    error: jest.fn(),
+    success: jest.fn(),
+  },
+}));
+
 // Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
@@ -168,5 +175,34 @@ describe('usePortfolio Hook', () => {
     });
 
     expect(result.current.etfs.find((e) => e.id === 'to-remove')).toBeUndefined();
+  });
+
+  it('ignores invalid JSON in localStorage during migration', async () => {
+    (getItem as jest.Mock).mockResolvedValue(null);
+    window.localStorage.setItem('etf_portfolio_data', 'invalid-json');
+
+    const { result } = renderHook(() => usePortfolio(), { wrapper: LanguageProvider });
+
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
+
+    expect(window.localStorage.getItem('etf_portfolio_data')).toBe('invalid-json');
+  });
+
+  it('shows error toast when storage throws an error', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    (getItem as jest.Mock).mockRejectedValue(new Error('IndexedDB Error'));
+
+    const { toast } = require('sonner');
+
+    const { result } = renderHook(() => usePortfolio(), { wrapper: LanguageProvider });
+
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
+
+    expect(toast.error).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });
