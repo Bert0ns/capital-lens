@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Menu, LayoutDashboard, Info, ExternalLink } from 'lucide-react';
+import { Menu, LayoutDashboard, Info } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -10,10 +10,26 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+
+const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    {...props}
+  >
+    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.24c3-.34 6-1.53 6-6.76a5.5 5.5 0 0 0-1.5-3.89 5.06 5.06 0 0 0-.14-3.83s-1.18-.38-3.9 1.46a13.25 13.25 0 0 0-7 0C4.68 4.05 3.5 4.43 3.5 4.43a5.06 5.06 0 0 0-.14 3.83A5.5 5.5 0 0 0 2 12c0 5.22 3 6.42 6 6.76a4.8 4.8 0 0 0-1 3.24v4" />
+    <path d="M9 19c-5 1.5-5-2.5-7-3" />
+  </svg>
+);
 
 export default function Navbar() {
   const { t } = useTranslation();
@@ -52,19 +68,25 @@ export default function Navbar() {
             >
               {t.navbar.about}
             </Link>
-            <a
-              href="https://github.com/Bert0ns/investment-portfolio-analysis"
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest"
-            >
-              {t.navbar.github}
-            </a>
           </div>
 
           {/* Right: Theme Switcher & Mobile Nav */}
           <div className="flex items-center gap-4 justify-end relative z-10">
             <div className="hidden md:flex items-center gap-2">
+              <a
+                href="https://github.com/Bert0ns/investment-portfolio-analysis"
+                target="_blank"
+                rel="noreferrer"
+                className={buttonVariants({
+                  variant: 'outline',
+                  size: 'icon',
+                  className: 'w-9 h-9 border-primary/50 hover:bg-primary/20 text-primary',
+                })}
+                title={t.navbar.github}
+              >
+                <GithubIcon className="h-4 w-4" />
+                <span className="sr-only">{t.navbar.github}</span>
+              </a>
               <LanguageSwitcher />
               <ThemeSwitcher />
             </div>
@@ -118,7 +140,7 @@ export default function Navbar() {
                       rel="noreferrer"
                       className="flex items-center gap-4 px-4 py-4 rounded-md border border-transparent text-base font-medium text-muted-foreground hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all uppercase tracking-wider"
                     >
-                      <ExternalLink className="h-5 w-5" />
+                      <GithubIcon className="h-5 w-5" />
                       {t.navbar.github}
                     </a>
                   </div>
