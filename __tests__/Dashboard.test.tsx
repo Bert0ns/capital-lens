@@ -69,7 +69,7 @@ describe('Dashboard Component', () => {
     const riskTab = screen.getByRole('button', { name: 'Risk Analysis' });
     fireEvent.click(riskTab);
 
-    // Should show Replication Method
-    expect(screen.getByText('Replication Method')).toBeInTheDocument();
+    // Should show Concentration Chart
+    expect(screen.getByText('Portfolio Concentration (Top 50 Holdings)')).toBeInTheDocument();
   });
 });

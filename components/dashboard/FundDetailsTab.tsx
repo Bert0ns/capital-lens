@@ -10,6 +10,8 @@ interface FundDetailsTabProps {
   domicileData: ChartData;
   fundSizeData: ChartData;
   fundAgeData: ChartData;
+  replicationData: ChartData;
+  profitData: ChartData;
 }
 
 export function FundDetailsTab({
@@ -17,6 +19,8 @@ export function FundDetailsTab({
   domicileData,
   fundSizeData,
   fundAgeData,
+  replicationData,
+  profitData,
 }: FundDetailsTabProps) {
   const { t } = useTranslation();
 
@@ -57,6 +61,24 @@ export function FundDetailsTab({
           data={fundAgeData}
           unit={t.fundDetailsTab.yearsUnit}
           colorOffset={7}
+        />
+      </div>
+
+      <div className="transition-transform hover:scale-[1.02] duration-300">
+        <PieChartCard
+          title={t.riskAnalysisTab.replicationMethodTitle}
+          info={t.riskAnalysisTab.replicationMethodInfo}
+          data={replicationData}
+          colorOffset={8}
+        />
+      </div>
+
+      <div className="transition-transform hover:scale-[1.02] duration-300">
+        <PieChartCard
+          title={t.riskAnalysisTab.useOfProfitTitle}
+          info={t.riskAnalysisTab.useOfProfitInfo}
+          data={profitData}
+          colorOffset={3}
         />
       </div>
     </>

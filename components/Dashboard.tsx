@@ -174,6 +174,8 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
             domicileData={domicileData}
             fundSizeData={fundSizeData}
             fundAgeData={fundAgeData}
+            replicationData={replicationData}
+            profitData={profitData}
           />
         )}
 
@@ -181,8 +183,6 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
           <RiskAnalysisTab
             concentrationData={concentrationData}
             weightDistributionData={weightDistributionData}
-            replicationData={replicationData}
-            profitData={profitData}
           />
         )}
 
