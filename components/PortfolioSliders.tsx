@@ -7,6 +7,7 @@ import { Trash2, RotateCcw } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
 import { Slider } from './ui/slider';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { useTranslation } from '../lib/i18n/LanguageContext';
 import EtfForm from './EtfForm';
 
@@ -119,7 +120,9 @@ function EtfSliderRow({
   onRemove: (id: string) => void;
 }) {
   const { t } = useTranslation();
-  const [localWeight, setLocalWeight] = React.useState(Math.round(etf.globalWeight || 0));
+  const [localWeight, setLocalWeight] = React.useState<number | string>(
+    Math.round(etf.globalWeight || 0)
+  );
 
   // Sync from parent if it changes externally (e.g., Reset Defaults)
   React.useEffect(() => {
@@ -130,12 +133,12 @@ function EtfSliderRow({
   // Sync to parent with a debounce to prevent React infinite update loops
   React.useEffect(() => {
     const handler = setTimeout(() => {
-      onUpdateWeight(etf.id, localWeight);
+      onUpdateWeight(etf.id, Number(localWeight) || 0);
     }, 50);
     return () => clearTimeout(handler);
   }, [localWeight, etf.id, onUpdateWeight]);
 
-  const sliderValue = React.useMemo(() => [localWeight], [localWeight]);
+  const sliderValue = React.useMemo(() => [Number(localWeight) || 0], [localWeight]);
 
   return (
     <div className="space-y-3">
@@ -154,7 +157,24 @@ function EtfSliderRow({
           </p>
         </div>
         <div className="flex items-center space-x-3">
-          <span className="font-semibold text-sm w-12 text-right">{localWeight}%</span>
+          <div className="flex items-center">
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={localWeight}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '') {
+                  setLocalWeight('');
+                } else {
+                  setLocalWeight(Math.max(0, Math.min(100, Number(val))));
+                }
+              }}
+              className="w-[4.5rem] h-8 text-right font-semibold text-sm pr-2"
+            />
+            <span className="font-semibold text-sm ml-1">%</span>
+          </div>
           <Button
             variant="ghost"
             size="icon"
