@@ -45,7 +45,7 @@ interface VisualsTabProps {
 
 export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: VisualsTabProps) {
   const { t } = useTranslation();
-  const [active3DVisual, setActive3DVisual] = useState<'Globe' | 'Network' | 'City'>('City');
+  const [active3DVisual, setActive3DVisual] = useState<'Globe' | 'Network' | 'City'>('Globe');
 
   // Globe controls state
   const [globeRotating, setGlobeRotating] = useState(true);

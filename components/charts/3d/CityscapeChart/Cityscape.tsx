@@ -40,7 +40,7 @@ export function Cityscape({ etfs, isRotating }: CityscapeProps) {
     <Card className="p-0 hover:border-primary/50 transition-colors duration-500 border border-border bg-card/40 backdrop-blur-md overflow-hidden relative">
       <CardContent className="p-0">
         <div className="h-150 w-full relative bg-[#030712] overflow-hidden">
-          <Canvas camera={{ position: [0, 30, 40], fov: 45 }}>
+          <Canvas camera={{ position: [0, 50, 70], fov: 45 }}>
             <ambientLight intensity={0.4} />
             <directionalLight position={[10, 20, 10]} intensity={1.5} color="#ffffff" />
             <pointLight position={[-10, 5, -10]} intensity={0.8} color="#22d3ee" />
@@ -84,7 +84,7 @@ export function Cityscape({ etfs, isRotating }: CityscapeProps) {
               autoRotateSpeed={0.5}
               maxPolarAngle={Math.PI / 2 - 0.1}
               minDistance={10}
-              maxDistance={80}
+              maxDistance={120}
             />
           </Canvas>
 

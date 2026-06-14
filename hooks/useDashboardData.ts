@@ -30,18 +30,32 @@ export function useDashboardData(etfs: EtfConfig[]) {
       });
     });
 
-    const formatData = (map: Map<string, number>, translator?: (key: string) => string) =>
-      Array.from(map.entries())
+    const formatData = (
+      map: Map<string, number>,
+      translator?: (key: string) => string,
+      limit?: number
+    ) => {
+      const sorted = Array.from(map.entries())
         .map(([name, value]) => ({ name: translator ? translator(name) : name, value }))
         .sort((a, b) => b.value - a.value);
+
+      if (limit && sorted.length > limit) {
+        const top = sorted.slice(0, limit);
+        const otherValue = sorted.slice(limit).reduce((acc, curr) => acc + curr.value, 0);
+        top.push({ name: t.sectors.Other, value: otherValue });
+        return top;
+      }
+      return sorted;
+    };
 
     return {
       geoData: formatData(geoMap),
       sectorData: formatData(
         sectorMap,
-        (name) => t.sectors[name as keyof typeof t.sectors] || name
-      ).slice(0, 10),
-      currencyData: formatData(currencyMap).slice(0, 5),
+        (name) => t.sectors[name as keyof typeof t.sectors] || name,
+        11 // Show top 11 GICS sectors + Cash, anything beyond groups to Other
+      ),
+      currencyData: formatData(currencyMap, undefined, 6),
     };
   }, [etfs, t]);
 
