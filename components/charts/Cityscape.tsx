@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stars, Text } from '@react-three/drei';
+import { OrbitControls, Stars, Html } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { useSpring, a } from '@react-spring/three';
 import * as THREE from 'three';
@@ -36,6 +36,7 @@ interface PlacedBuilding {
   y: number;
   size: number;
   depth: number;
+  isLargest?: boolean;
 }
 
 const SECTOR_COLORS: Record<string, string> = {
@@ -145,22 +146,24 @@ function packBuildingsInSector(
   const children = [...sector.children].sort((a, b) => b.value - a.value);
 
   for (const child of children) {
-    const areaShare = (child.value / sector.value) * (districtSize * districtSize) * 0.35;
-    const size = Math.max(0.4, Math.min(Math.sqrt(areaShare), 2.5));
-    const depth = Math.max(1, Math.pow(child.value, 0.85) * 10);
-    const GAP = 0.4;
+    // Area proportional to weight, occupying ~45% of district space
+    const areaShare = (child.value / sector.value) * (districtSize * districtSize) * 0.45;
+    const size = Math.max(0.05, Math.min(Math.sqrt(areaShare), 3.0)); // Lower minimum size to allow tiny buildings
+    const depth = Math.max(0.1, Math.pow(child.value, 0.85) * 10);
+    const GAP = Math.max(0.05, size * 0.15); // Tighter gap
     let angle = 0;
 
-    while (angle < 300) {
-      const radius = 0.4 * angle;
+    // Archimedean spiral search
+    while (angle < 1000) {
+      const radius = 0.15 * angle; // Tighter spiral turns
       const localX = Math.cos(angle) * radius;
       const localY = Math.sin(angle) * radius;
       const globalX = centerX + localX;
       const globalY = centerY + localY;
 
       if (
-        Math.abs(localX) + size / 2 <= districtSize / 2 - 0.5 &&
-        Math.abs(localY) + size / 2 <= districtSize / 2 - 0.5 &&
+        Math.abs(localX) + size / 2 <= districtSize / 2 - 0.2 &&
+        Math.abs(localY) + size / 2 <= districtSize / 2 - 0.2 &&
         !isColliding(globalX, globalY, size, placedBuildings, GAP)
       ) {
         placedBuildings.push({
@@ -172,6 +175,7 @@ function packBuildingsInSector(
           y: globalY,
           size,
           depth,
+          isLargest: placedBuildings.length === 0,
         });
         break;
       }
@@ -209,20 +213,62 @@ function AnimatedDistrictPad({
   });
 
   return (
-    <a.mesh position-x={x} position-y={y} position-z={0} scale-x={size} scale-y={size} scale-z={1}>
-      <planeGeometry args={[1, 1]} />
-      <meshStandardMaterial color={plane.color} opacity={0.12} transparent depthWrite={false} />
+    <a.group position-x={x} position-y={y} position-z={0}>
+      <a.mesh scale-x={size} scale-y={size} scale-z={1}>
+        <planeGeometry args={[1, 1]} />
+        <meshStandardMaterial color={plane.color} opacity={0.12} transparent depthWrite={false} />
 
-      <mesh>
-        <boxGeometry args={[1, 1, 0.05]} />
-        <meshBasicMaterial color={plane.color} wireframe transparent opacity={0.2} />
-      </mesh>
-    </a.mesh>
+        <mesh>
+          <boxGeometry args={[1, 1, 0.05]} />
+          <meshBasicMaterial color={plane.color} wireframe transparent opacity={0.2} />
+        </mesh>
+      </a.mesh>
+
+      {/* District Name Label */}
+      <a.group position-y={size.to((s) => s / 2 + 0.5)} position-z={0.1}>
+        <Html center zIndexRange={[100, 0]} className="pointer-events-none opacity-90">
+          <div
+            className="text-[10px] md:text-xs font-bold uppercase tracking-widest whitespace-nowrap drop-shadow-[0_2px_6px_rgba(0,0,0,1)]"
+            style={{ color: plane.color }}
+          >
+            {plane.name}
+          </div>
+        </Html>
+      </a.group>
+    </a.group>
+  );
+}
+
+function HighestBuildingLabel({ b, isHovered }: { b: PlacedBuilding; isHovered: boolean }) {
+  const { x, y, depth } = useSpring({
+    x: b.x,
+    y: b.y,
+    depth: b.depth,
+    config: { mass: 1, tension: 170, friction: 26 },
+  });
+
+  return (
+    <a.group position-x={x} position-y={y} position-z={depth}>
+      <Html center zIndexRange={[100, 0]} className="pointer-events-none">
+        <div
+          className={`flex flex-col items-center pb-4 transition-all duration-500 cursor-default ${
+            isHovered ? 'opacity-100 scale-125' : 'opacity-40 scale-100'
+          }`}
+        >
+          <div className="text-[7px] md:text-[8px] font-medium tracking-widest whitespace-nowrap px-1 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,1)]">
+            {b.name}
+          </div>
+          <div className="w-[1px] h-4 bg-gradient-to-b from-white/40 to-transparent mt-0.5" />
+        </div>
+      </Html>
+    </a.group>
   );
 }
 
 const tempObject = new THREE.Object3D();
 const tempColor = new THREE.Color();
+
+const MAX_BUILDINGS = 5000;
 
 function FastBuildings({
   buildings,
@@ -244,12 +290,21 @@ function FastBuildings({
     Map<string, { x: number; y: number; size: number; depth: number; emissive: number }>
   >(new Map());
 
+  // Dynamically update the active draw count without remounting the buffers
+  React.useLayoutEffect(() => {
+    const activeCount = Math.min(count, MAX_BUILDINGS);
+    if (skyRef.current) skyRef.current.count = activeCount;
+    if (wireRef.current) wireRef.current.count = activeCount;
+    if (plazaRef.current) plazaRef.current.count = activeCount;
+  }, [count]);
+
   useFrame((state, delta) => {
     // Framerate-independent lerp factor (similar to a spring)
     const factor = 1 - Math.exp(-15 * delta);
     let needsUpdate = false;
 
-    buildings.forEach((b, i) => {
+    for (let i = 0; i < Math.min(buildings.length, MAX_BUILDINGS); i++) {
+      const b = buildings[i];
       let curr = animStates.current.get(b.name);
       if (!curr) {
         curr = { x: b.x, y: b.y, size: b.size, depth: b.depth, emissive: 0.3 };
@@ -296,7 +351,7 @@ function FastBuildings({
       }
 
       needsUpdate = true;
-    });
+    }
 
     if (needsUpdate) {
       if (skyRef.current) {
@@ -316,7 +371,7 @@ function FastBuildings({
 
   const handlePointerOver = (e: any) => {
     e.stopPropagation();
-    if (e.instanceId !== undefined) {
+    if (e.instanceId !== undefined && e.instanceId < count) {
       setHoveredBuilding(buildings[e.instanceId]);
     }
   };
@@ -328,14 +383,14 @@ function FastBuildings({
 
   return (
     <group>
-      <instancedMesh ref={plazaRef} args={[null as any, null as any, count]}>
+      <instancedMesh ref={plazaRef} args={[null as any, null as any, MAX_BUILDINGS]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial opacity={0.08} transparent depthWrite={false} />
       </instancedMesh>
 
       <instancedMesh
         ref={skyRef}
-        args={[null as any, null as any, count]}
+        args={[null as any, null as any, MAX_BUILDINGS]}
         onPointerOver={handlePointerOver}
         onPointerOut={handlePointerOut}
       >
@@ -343,7 +398,7 @@ function FastBuildings({
         <meshStandardMaterial metalness={0.9} roughness={0.1} />
       </instancedMesh>
 
-      <instancedMesh ref={wireRef} args={[null as any, null as any, count]}>
+      <instancedMesh ref={wireRef} args={[null as any, null as any, MAX_BUILDINGS]}>
         <boxGeometry args={[1, 1, 1]} />
         <meshBasicMaterial wireframe transparent opacity={0.4} />
       </instancedMesh>
@@ -406,9 +461,9 @@ export function Cityscape({ etfs, isRotating }: CityscapeProps) {
 
             <EffectComposer>
               <Bloom
-                luminanceThreshold={0.2}
-                luminanceSmoothing={0.9}
-                intensity={isDark ? 1.5 : 0.5}
+                luminanceThreshold={0.1}
+                luminanceSmoothing={0.5}
+                intensity={isDark ? 3.0 : 1.5}
               />
             </EffectComposer>
 
@@ -425,6 +480,16 @@ export function Cityscape({ etfs, isRotating }: CityscapeProps) {
                 hoveredBuilding={hoveredBuilding}
                 setHoveredBuilding={setHoveredBuilding}
               />
+
+              {cityData.buildings
+                .filter((b) => b.isLargest)
+                .map((b) => (
+                  <HighestBuildingLabel
+                    key={`highest-${b.sector}-${b.name}`}
+                    b={b}
+                    isHovered={hoveredBuilding?.name === b.name}
+                  />
+                ))}
             </group>
 
             <OrbitControls
