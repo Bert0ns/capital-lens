@@ -4,6 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, Text } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import { useSpring, a } from '@react-spring/three';
 import * as THREE from 'three';
 import { EtfConfig } from '../../lib/types';
 import { normalizeSector } from '../../lib/math';
@@ -180,6 +181,109 @@ function packBuildingsInSector(
   return placedBuildings;
 }
 
+function AnimatedGround({ width, height }: { width: number; height: number }) {
+  const { scaleX, scaleY } = useSpring({
+    scaleX: width + 30,
+    scaleY: height + 30,
+    config: { mass: 1, tension: 100, friction: 20 },
+  });
+
+  return (
+    <a.mesh position={[0, 0, -0.5]} scale-x={scaleX} scale-y={scaleY} scale-z={1}>
+      <planeGeometry args={[1, 1]} />
+      <meshStandardMaterial color="#09090b" />
+    </a.mesh>
+  );
+}
+
+function AnimatedDistrictPad({
+  plane,
+}: {
+  plane: { x: number; y: number; size: number; color: string; name: string };
+}) {
+  const { x, y, size } = useSpring({
+    x: plane.x,
+    y: plane.y,
+    size: plane.size,
+    config: { mass: 1, tension: 100, friction: 20 },
+  });
+
+  return (
+    <a.mesh position-x={x} position-y={y} position-z={0} scale-x={size} scale-y={size} scale-z={1}>
+      <planeGeometry args={[1, 1]} />
+      <meshStandardMaterial color={plane.color} opacity={0.12} transparent depthWrite={false} />
+
+      <mesh>
+        <boxGeometry args={[1, 1, 0.05]} />
+        <meshBasicMaterial color={plane.color} wireframe transparent opacity={0.2} />
+      </mesh>
+    </a.mesh>
+  );
+}
+
+function AnimatedBuilding({
+  b,
+  isHovered,
+  onPointerOver,
+  onPointerOut,
+}: {
+  b: PlacedBuilding;
+  isHovered: boolean;
+  onPointerOver: (e: any) => void;
+  onPointerOut: (e: any) => void;
+}) {
+  const { posX, posY, sizeXY, depth, emissiveIntensity } = useSpring({
+    posX: b.x,
+    posY: b.y,
+    sizeXY: b.size,
+    depth: b.depth,
+    emissiveIntensity: isHovered ? 1.0 : 0.3,
+    config: { mass: 1, tension: 120, friction: 14 },
+  });
+
+  return (
+    <a.group position-x={posX} position-y={posY} position-z={0}>
+      <a.mesh
+        position={[0, 0, 0.05]}
+        scale-x={sizeXY.to((s) => s + 0.3)}
+        scale-y={sizeXY.to((s) => s + 0.3)}
+        scale-z={1}
+      >
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial color={b.color} opacity={0.08} transparent depthWrite={false} />
+      </a.mesh>
+
+      <a.mesh
+        position-z={depth.to((d) => d / 2)}
+        scale-x={sizeXY}
+        scale-y={sizeXY}
+        scale-z={depth}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+      >
+        <boxGeometry args={[1, 1, 1]} />
+        <a.meshStandardMaterial
+          color={b.color}
+          emissive={b.color}
+          emissiveIntensity={emissiveIntensity}
+          metalness={0.9}
+          roughness={0.1}
+        />
+      </a.mesh>
+
+      <a.mesh
+        position-z={depth.to((d) => d / 2)}
+        scale-x={sizeXY.to((s) => s + 0.01)}
+        scale-y={sizeXY.to((s) => s + 0.01)}
+        scale-z={depth.to((d) => d + 0.01)}
+      >
+        <boxGeometry args={[1, 1, 1]} />
+        <meshBasicMaterial color={b.color} wireframe transparent opacity={0.4} />
+      </a.mesh>
+    </a.group>
+  );
+}
+
 export function Cityscape({ etfs, isRotating }: CityscapeProps) {
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'theme-cyberpunk';
@@ -242,81 +346,30 @@ export function Cityscape({ etfs, isRotating }: CityscapeProps) {
             </EffectComposer>
 
             <Stars radius={100} depth={50} count={2000} factor={2} fade speed={0.5} />
-
             <group rotation={[-Math.PI / 2, 0, 0]}>
-              {/* Ground Plane */}
-              <mesh position={[0, 0, -0.5]}>
-                <planeGeometry args={[cityData.totalWidth + 30, cityData.totalHeight + 30]} />
-                <meshStandardMaterial color="#09090b" />
-              </mesh>
+              <AnimatedGround width={cityData.totalWidth} height={cityData.totalHeight} />
 
-              {/* District Pads */}
               {cityData.districtPlanes.map((plane, i) => (
-                <mesh key={`pad-${i}`} position={[plane.x, plane.y, 0]}>
-                  <planeGeometry args={[plane.size, plane.size]} />
-                  <meshStandardMaterial
-                    color={plane.color}
-                    opacity={0.12}
-                    transparent
-                    depthWrite={false}
-                  />
-
-                  {/* Subtle border around the district */}
-                  <mesh>
-                    <boxGeometry args={[plane.size, plane.size, 0.05]} />
-                    <meshBasicMaterial color={plane.color} wireframe transparent opacity={0.2} />
-                  </mesh>
-                </mesh>
+                <AnimatedDistrictPad key={`pad-${i}-${plane.name}`} plane={plane} />
               ))}
 
               {cityData.buildings.map((b, i) => {
-                const posX = b.x;
-                const posY = b.y;
-                const posZ = b.depth / 2; // Center Z so it sits on the ground
-
                 const isHovered = hoveredBuilding?.name === b.name;
 
                 return (
-                  <group key={`${b.name}-${i}`} position={[posX, posY, 0]}>
-                    {/* The lot plaza/foundation (slightly larger than base) */}
-                    <mesh position={[0, 0, 0.05]}>
-                      <planeGeometry args={[b.size + 0.3, b.size + 0.3]} />
-                      <meshBasicMaterial
-                        color={b.color}
-                        opacity={0.08}
-                        transparent
-                        depthWrite={false}
-                      />
-                    </mesh>
-
-                    {/* The skyscraper */}
-                    <mesh
-                      position={[0, 0, posZ]}
-                      onPointerOver={(e) => {
-                        e.stopPropagation();
-                        setHoveredBuilding(b);
-                      }}
-                      onPointerOut={(e) => {
-                        e.stopPropagation();
-                        setHoveredBuilding(null);
-                      }}
-                    >
-                      <boxGeometry args={[b.size, b.size, b.depth]} />
-                      <meshStandardMaterial
-                        color={b.color}
-                        emissive={b.color}
-                        emissiveIntensity={isHovered ? 1.0 : 0.3}
-                        metalness={0.9}
-                        roughness={0.1}
-                      />
-                    </mesh>
-
-                    {/* Add wireframe for neon effect */}
-                    <mesh position={[0, 0, posZ]}>
-                      <boxGeometry args={[b.size + 0.01, b.size + 0.01, b.depth + 0.01]} />
-                      <meshBasicMaterial color={b.color} wireframe transparent opacity={0.4} />
-                    </mesh>
-                  </group>
+                  <AnimatedBuilding
+                    key={`${b.sector}-${b.name}`}
+                    b={b}
+                    isHovered={isHovered}
+                    onPointerOver={(e) => {
+                      e.stopPropagation();
+                      setHoveredBuilding(b);
+                    }}
+                    onPointerOut={(e) => {
+                      e.stopPropagation();
+                      setHoveredBuilding(null);
+                    }}
+                  />
                 );
               })}
             </group>
@@ -325,7 +378,7 @@ export function Cityscape({ etfs, isRotating }: CityscapeProps) {
               enableZoom={true}
               autoRotate={isRotating}
               autoRotateSpeed={0.5}
-              maxPolarAngle={Math.PI / 2 - 0.1} // Prevent going below ground
+              maxPolarAngle={Math.PI / 2 - 0.1}
               minDistance={10}
               maxDistance={80}
             />
