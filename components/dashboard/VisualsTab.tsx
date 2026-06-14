@@ -103,7 +103,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
       {active3DVisual === 'Globe' ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row justify-between gap-6 p-4 bg-muted/30 rounded-lg border border-border items-center">
-            <div className="flex flex-col gap-2 min-w-[140px]">
+            <div className="flex flex-col gap-2 min-w-35">
               <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
                 {t.threeDVisuals.regionsActive}
               </Label>
@@ -170,7 +170,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
                 className="py-2"
               />
             </div>
-            <div className="flex flex-col gap-2 min-w-[140px]">
+            <div className="flex flex-col gap-2 min-w-35">
               <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
                 {t.threeDVisuals.displayMode}
               </Label>
@@ -217,7 +217,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
       ) : active3DVisual === 'City' ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row justify-between gap-6 p-4 bg-muted/30 rounded-lg border border-border items-center">
-            <div className="flex flex-col gap-2 min-w-[140px]">
+            <div className="flex flex-col gap-2 min-w-35">
               <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
                 3D Treemap City
               </Label>

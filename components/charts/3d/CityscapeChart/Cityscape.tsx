@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { EtfConfig } from '@/lib/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { useTheme } from 'next-themes';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface CityscapeProps {
   etfs: EtfConfig[];
@@ -246,12 +247,13 @@ export function Cityscape({ etfs, isRotating }: CityscapeProps) {
   const isDark = resolvedTheme === 'theme-cyberpunk';
   const [hoveredBuilding, setHoveredBuilding] = useState<PlacedBuilding | null>(null);
 
-  const cityData = useMemo(() => layoutCityscape(etfs), [etfs]);
+  const debouncedEtfs = useDebounce(etfs, 400);
+  const cityData = useMemo(() => layoutCityscape(debouncedEtfs), [debouncedEtfs]);
 
   return (
     <Card className="p-0 hover:border-primary/50 transition-colors duration-500 border border-border bg-card/40 backdrop-blur-md overflow-hidden relative">
       <CardContent className="p-0">
-        <div className="h-[600px] w-full relative bg-[#030712] overflow-hidden">
+        <div className="h-150 w-full relative bg-[#030712] overflow-hidden">
           <Canvas camera={{ position: [0, 30, 40], fov: 45 }}>
             <ambientLight intensity={0.4} />
             <directionalLight position={[10, 20, 10]} intensity={1.5} color="#ffffff" />
