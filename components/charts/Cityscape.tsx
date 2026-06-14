@@ -8,7 +8,7 @@ import { useSpring, a } from '@react-spring/three';
 import * as THREE from 'three';
 import { EtfConfig } from '../../lib/types';
 import { normalizeSector } from '../../lib/math';
-import { Card, CardContent } from '../ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useTheme } from 'next-themes';
 
 interface CityscapeProps {
@@ -258,7 +258,7 @@ function HighestBuildingLabel({ b, isHovered }: { b: PlacedBuilding; isHovered: 
           <div className="text-[7px] md:text-[8px] font-medium tracking-widest whitespace-nowrap px-1 text-white drop-shadow-[0_1px_3px_rgba(0,0,0,1)]">
             {b.name}
           </div>
-          <div className="w-[1px] h-4 bg-gradient-to-b from-white/40 to-transparent mt-0.5" />
+          <div className="w-px h-4 bg-linear-to-b from-white/40 to-transparent mt-0.5" />
         </div>
       </Html>
     </a.group>
@@ -312,7 +312,7 @@ function FastBuildings({
       }
 
       const isHovered = hoveredBuilding?.name === b.name;
-      const targetEmissive = isHovered ? 1.0 : 0.3;
+      const targetEmissive = isHovered ? 3.5 : 0.6;
 
       curr.x = THREE.MathUtils.lerp(curr.x, b.x, factor);
       curr.y = THREE.MathUtils.lerp(curr.y, b.y, factor);
@@ -338,7 +338,7 @@ function FastBuildings({
         tempObject.scale.set(curr.size + 0.01, curr.size + 0.01, curr.depth + 0.01);
         tempObject.updateMatrix();
         wireRef.current.setMatrixAt(i, tempObject.matrix);
-        wireRef.current.setColorAt(i, tempColor.set(b.color));
+        wireRef.current.setColorAt(i, tempColor.set(b.color).multiplyScalar(isHovered ? 5.0 : 0.4));
       }
 
       // --- Plaza Foundation ---
@@ -395,12 +395,12 @@ function FastBuildings({
         onPointerOut={handlePointerOut}
       >
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial metalness={0.9} roughness={0.1} />
+        <meshStandardMaterial metalness={0.9} roughness={0.1} toneMapped={false} />
       </instancedMesh>
 
       <instancedMesh ref={wireRef} args={[null as any, null as any, MAX_BUILDINGS]}>
         <boxGeometry args={[1, 1, 1]} />
-        <meshBasicMaterial wireframe transparent opacity={0.4} />
+        <meshBasicMaterial wireframe transparent opacity={0.6} toneMapped={false} />
       </instancedMesh>
     </group>
   );
@@ -461,9 +461,9 @@ export function Cityscape({ etfs, isRotating }: CityscapeProps) {
 
             <EffectComposer>
               <Bloom
-                luminanceThreshold={0.1}
+                luminanceThreshold={1.0}
                 luminanceSmoothing={0.5}
-                intensity={isDark ? 3.0 : 1.5}
+                intensity={isDark ? 2.5 : 1.2}
               />
             </EffectComposer>
 
