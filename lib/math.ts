@@ -11,11 +11,11 @@ const SECTOR_MAPPINGS: { matchers: RegExp[]; result: string }[] = [
   { matchers: [/industr/, /industrali/], result: 'Industrials' },
   { matchers: [/health/, /sanità/, /sanita/, /cura/, /salute/], result: 'Healthcare' },
   {
-    matchers: [/discrezionali/, /discretionary/, /cyclical/, /consumer services/],
+    matchers: [/discrezionali/, /discretionary/, /cyclical/, /consumer services/, /voluttuari/],
     result: 'Consumer Discretionary',
   },
   {
-    matchers: [/staples/, /beni di consumo/, /defensive/, /consumer goods/],
+    matchers: [/staples/, /beni di consumo/, /defensive/, /consumer goods/, /prima necessit/],
     result: 'Consumer Staples',
   },
   { matchers: [/material/, /materie prime/], result: 'Materials' },

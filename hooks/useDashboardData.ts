@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { EtfConfig } from '@/lib/types';
-import { aggregateTopHoldings, calculateAverageTer } from '@/lib/math';
+import { aggregateTopHoldings, calculateAverageTer, normalizeSector } from '@/lib/math';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 export function useDashboardData(etfs: EtfConfig[]) {
@@ -21,7 +21,7 @@ export function useDashboardData(etfs: EtfConfig[]) {
         if (holdingWeight <= 0) return;
 
         const country = String(h.country || 'Unknown');
-        const sector = String(h.sector || 'Unknown');
+        const sector = normalizeSector(String(h.sector || 'Unknown'));
         const currency = String(h.currency || 'Unknown');
 
         geoMap.set(country, (geoMap.get(country) || 0) + holdingWeight);
@@ -30,17 +30,20 @@ export function useDashboardData(etfs: EtfConfig[]) {
       });
     });
 
-    const formatData = (map: Map<string, number>) =>
+    const formatData = (map: Map<string, number>, translator?: (key: string) => string) =>
       Array.from(map.entries())
-        .map(([name, value]) => ({ name, value }))
+        .map(([name, value]) => ({ name: translator ? translator(name) : name, value }))
         .sort((a, b) => b.value - a.value);
 
     return {
       geoData: formatData(geoMap),
-      sectorData: formatData(sectorMap).slice(0, 10),
+      sectorData: formatData(
+        sectorMap,
+        (name) => t.sectors[name as keyof typeof t.sectors] || name
+      ).slice(0, 10),
       currencyData: formatData(currencyMap).slice(0, 5),
     };
-  }, [etfs]);
+  }, [etfs, t]);
 
   const etfAllocationData = useMemo(() => {
     return etfs

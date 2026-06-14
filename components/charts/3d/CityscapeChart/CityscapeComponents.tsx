@@ -21,11 +21,14 @@ export function AnimatedGround({ width, height }: { width: number; height: numbe
   );
 }
 
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+
 export function AnimatedDistrictPad({
   plane,
 }: {
   plane: { x: number; y: number; size: number; color: string; name: string };
 }) {
+  const { t } = useTranslation();
   const { x, y, size } = useSpring({
     x: plane.x,
     y: plane.y,
@@ -52,7 +55,7 @@ export function AnimatedDistrictPad({
             className="text-[10px] md:text-xs font-bold uppercase tracking-widest whitespace-nowrap drop-shadow-[0_2px_6px_rgba(0,0,0,1)]"
             style={{ color: plane.color }}
           >
-            {plane.name}
+            {t.sectors[plane.name as keyof typeof t.sectors] || plane.name}
           </div>
         </Html>
       </a.group>
