@@ -28,6 +28,19 @@ describe('EtfForm Component', () => {
         useOfProfit: 'Use of Profit',
         domicile: 'Domicile',
       },
+      etfProperties: {
+        Physical: 'Physical',
+        Synthetic: 'Synthetic',
+        Optimized: 'Optimized',
+        Accumulating: 'Accumulating',
+        Distributing: 'Distributing',
+        Ireland: 'Ireland',
+        Luxembourg: 'Luxembourg',
+        US: 'US',
+      },
+      sectors: {
+        Other: 'Other',
+      },
     };
 
     (useTranslation as jest.Mock).mockReturnValue({

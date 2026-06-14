@@ -15,6 +15,20 @@ describe('useDashboardData', () => {
           unknown: 'Unknown',
           top: 'Top',
         },
+        sectors: {
+          'Information Technology': 'Information Technology',
+          Unknown: 'Unknown',
+        },
+        etfProperties: {
+          Physical: 'Physical',
+          Synthetic: 'Synthetic',
+          Optimized: 'Optimized',
+          Accumulating: 'Accumulating',
+          Distributing: 'Distributing',
+          Ireland: 'Ireland',
+          Luxembourg: 'Luxembourg',
+          US: 'US',
+        },
       },
     });
   });
