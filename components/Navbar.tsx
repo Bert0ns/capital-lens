@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Menu, LayoutDashboard, Info } from 'lucide-react';
@@ -35,26 +36,30 @@ const GithubIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function Navbar() {
   const { t } = useTranslation();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <nav className="border-b border-border bg-background/80 backdrop-blur-xl sticky top-0 z-50 w-full">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative">
         <div className="flex justify-between h-16 items-center w-full">
-          <div className="flex items-center gap-3 relative z-10">
+          <Link
+            href="/"
+            className="flex items-center gap-3 relative z-10 hover:opacity-90 transition-opacity"
+          >
             <Image
               src="/logo.svg"
-              alt="Portfolio Analyzer"
+              alt="Capital Lens"
               width={32}
               height={32}
               className="w-8 h-8 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]"
             />
-            <Link href="/" className="font-black text-xl tracking-widest uppercase hidden sm:block">
-              <span className="text-foreground">Portfolio</span>{' '}
+            <div className="font-black text-xl tracking-widest uppercase hidden sm:block">
+              <span className="text-foreground">Capital</span>{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
-                Analyzer
+                Lens
               </span>
-            </Link>
-          </div>
+            </div>
+          </Link>
 
           {/* Center: Desktop Nav */}
           <div className="hidden md:flex gap-8 items-center absolute left-1/2 -translate-x-1/2 z-10">
@@ -97,7 +102,7 @@ export default function Navbar() {
             </div>
 
             <div className="md:hidden flex items-center">
-              <Sheet>
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger render={<Button variant="ghost" size="icon" />}>
                   <Menu className="h-6 w-6" />
                 </SheetTrigger>
@@ -108,25 +113,30 @@ export default function Navbar() {
                   <SheetTitle className="sr-only">{t.navbar.menu}</SheetTitle>
                   <SheetDescription className="sr-only">Navigation menu</SheetDescription>
 
-                  <div className="flex flex-col items-center justify-center gap-4 mb-8 border-b border-border pb-8 mt-10">
+                  <Link
+                    href="/"
+                    onClick={() => setIsOpen(false)}
+                    className="flex flex-col items-center justify-center gap-4 mb-8 border-b border-border pb-8 mt-10 hover:opacity-90 transition-opacity"
+                  >
                     <Image
                       src="/logo.svg"
-                      alt="Portfolio Analyzer Logo"
+                      alt="Capital Lens Logo"
                       width={64}
                       height={64}
                       className="w-16 h-16 drop-shadow-[0_0_15px_rgba(34,211,238,0.6)]"
                     />
                     <span className="font-black text-2xl uppercase tracking-widest text-center">
-                      <span className="text-foreground">Portfolio</span>{' '}
+                      <span className="text-foreground">Capital</span>{' '}
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]">
-                        Analyzer
+                        Lens
                       </span>
                     </span>
-                  </div>
+                  </Link>
 
                   <div className="flex flex-col gap-4">
                     <Link
                       href="/analyzer"
+                      onClick={() => setIsOpen(false)}
                       className="flex items-center gap-4 px-4 py-4 rounded-md border border-transparent text-base font-medium text-muted-foreground hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all uppercase tracking-wider"
                     >
                       <LayoutDashboard className="h-5 w-5" />
@@ -134,6 +144,7 @@ export default function Navbar() {
                     </Link>
                     <Link
                       href="/about"
+                      onClick={() => setIsOpen(false)}
                       className="flex items-center gap-4 px-4 py-4 rounded-md border border-transparent text-base font-medium text-muted-foreground hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all uppercase tracking-wider"
                     >
                       <Info className="h-5 w-5" />
@@ -143,6 +154,7 @@ export default function Navbar() {
                       href="https://github.com/Bert0ns/investment-portfolio-analysis"
                       target="_blank"
                       rel="noreferrer"
+                      onClick={() => setIsOpen(false)}
                       className="flex items-center gap-4 px-4 py-4 rounded-md border border-transparent text-base font-medium text-muted-foreground hover:bg-primary/10 hover:border-primary/30 hover:text-primary transition-all uppercase tracking-wider"
                     >
                       <GithubIcon className="h-5 w-5" />

@@ -1,6 +1,6 @@
 {
-  "name": "investment-portfolio-analysis",
-  "version": "0.1.0",
+  "name": "capital-lens",
+  "version": "0.3.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

@@ -12,7 +12,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'ETF Portfolio Analyzer',
+  title: 'Capital Lens',
   description: 'Analyze and visualize your custom ETF portfolio.',
 };
 
