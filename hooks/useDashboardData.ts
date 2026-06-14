@@ -68,10 +68,13 @@ export function useDashboardData(etfs: EtfConfig[]) {
         }
       }
       return Array.from(map.entries())
-        .map(([name, value]) => ({ name, value }))
+        .map(([name, value]) => ({
+          name: t.etfProperties[name as keyof typeof t.etfProperties] || name,
+          value,
+        }))
         .sort((a, b) => b.value - a.value);
     },
-    [etfs, t.dashboard.unknown]
+    [etfs, t]
   );
 
   const providerData = useMemo(() => aggregateEtfProperty('issuer'), [aggregateEtfProperty]);

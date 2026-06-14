@@ -15,14 +15,22 @@ const SECTOR_MAPPINGS: { matchers: RegExp[]; result: string }[] = [
     result: 'Consumer Discretionary',
   },
   {
-    matchers: [/staples/, /beni di consumo/, /defensive/, /consumer goods/, /prima necessit/],
+    matchers: [
+      /staples/,
+      /beni di consumo/,
+      /defensive/,
+      /consumer goods/,
+      /prima necessit/,
+      /largo consumo/,
+    ],
     result: 'Consumer Staples',
   },
   { matchers: [/material/, /materie prime/], result: 'Materials' },
   { matchers: [/energ/], result: 'Energy' },
   { matchers: [/utilit/, /pubblica utilit\u00e0/], result: 'Utilities' },
   { matchers: [/communication/, /telecom/, /comunicazion/], result: 'Communication Services' },
-  { matchers: [/real estate/, /immobiliare/, /property/], result: 'Real Estate' },
+  { matchers: [/real estate/, /immobili/, /property/], result: 'Real Estate' },
+  { matchers: [/cash/, /liquid/, /contant/, /derivat/], result: 'Cash' },
 ];
 
 export function normalizeSector(sector: string): string {

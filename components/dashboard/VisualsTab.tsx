@@ -87,7 +87,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
             onClick={() => setActive3DVisual('City')}
             className={`px-4 py-1.5 text-sm rounded-md font-medium transition-colors ${active3DVisual === 'City' ? 'bg-background shadow text-foreground' : 'text-muted-foreground'}`}
           >
-            Treemap City
+            {t.threeDVisuals.treemapCity}
           </button>
         </div>
         {onToggleFullscreen && (
@@ -219,14 +219,14 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
           <div className="flex flex-col md:flex-row justify-between gap-6 p-4 bg-muted/30 rounded-lg border border-border items-center">
             <div className="flex flex-col gap-2 min-w-35">
               <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
-                3D Treemap City
+                {t.threeDVisuals.treemapCity}
               </Label>
               <span className="text-sm font-medium text-amber-500">
                 {etfs.reduce(
                   (acc, etf) => acc + (etf.globalWeight > 0 ? etf.holdings.length : 0),
                   0
                 )}{' '}
-                Holdings Rendered
+                {t.threeDVisuals.holdingsRendered}
               </span>
             </div>
 
