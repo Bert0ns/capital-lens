@@ -53,7 +53,7 @@ export function HoldingsTable({ holdings }: HoldingsTableProps) {
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder={t.riskAnalysisTab.searchPlaceholder}
+            placeholder={t.deepDiveTab.searchPlaceholder}
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -79,7 +79,7 @@ export function HoldingsTable({ holdings }: HoldingsTableProps) {
             {currentHoldings.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                  {t.riskAnalysisTab.noHoldingsFound} &quot{search}&quot
+                  {t.deepDiveTab.noHoldingsFound} &quot{search}&quot
                 </TableCell>
               </TableRow>
             ) : (
