@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { ArrowRight, BarChart3, Globe, Layers, Zap, Shield, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import Landing3DBackground from './Landing3DBackground';
 
 export default function LandingContent() {
   const { t } = useTranslation();
 
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
@@ -21,7 +21,7 @@ export default function LandingContent() {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
     show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 24 } },
   };

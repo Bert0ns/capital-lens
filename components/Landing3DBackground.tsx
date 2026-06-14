@@ -98,12 +98,7 @@ function PortfolioNetwork({
       {/* Network Nodes (Assets) */}
       <points>
         <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={NODE_COUNT}
-            array={positionsArray}
-            itemSize={3}
-          />
+          <bufferAttribute attach="attributes-position" args={[positionsArray, 3]} />
         </bufferGeometry>
         <pointsMaterial
           color={isDark ? '#22d3ee' : '#3b82f6'}
