@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
-import EtfForm from '../components/EtfForm';
-import { useEtfForm } from '../hooks/useEtfForm';
-import { useTranslation } from '../lib/i18n/LanguageContext';
+import EtfForm from '@/components/EtfForm';
+import { useEtfForm } from '@/hooks/useEtfForm';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 jest.mock('../hooks/useEtfForm');
 jest.mock('../lib/i18n/LanguageContext', () => ({
@@ -27,6 +27,19 @@ describe('EtfForm Component', () => {
         fundAge: 'Fund Age',
         useOfProfit: 'Use of Profit',
         domicile: 'Domicile',
+      },
+      etfProperties: {
+        Physical: 'Physical',
+        Synthetic: 'Synthetic',
+        Optimized: 'Optimized',
+        Accumulating: 'Accumulating',
+        Distributing: 'Distributing',
+        Ireland: 'Ireland',
+        Luxembourg: 'Luxembourg',
+        US: 'US',
+      },
+      sectors: {
+        Other: 'Other',
       },
     };
 

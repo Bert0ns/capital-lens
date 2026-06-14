@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import Navbar from '../components/Navbar';
-import { useTranslation } from '../lib/i18n/LanguageContext';
+import Navbar from '@/components/Navbar';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 // Mock dependencies
 jest.mock('next/link', () => ({
@@ -11,7 +11,7 @@ jest.mock('next/link', () => ({
 }));
 jest.mock('next/image', () => ({
   __esModule: true,
-  // eslint-disable-next-line @next/next/no-img-element
+
   default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
     <img alt={props.alt || 'mocked image'} {...props} />
   ),

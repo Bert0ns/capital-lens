@@ -1,6 +1,6 @@
 'use client';
 
-import { Issuer, EtfConfig, ReplicationMethod, UseOfProfit, Domicile } from '../lib/types';
+import { Issuer, EtfConfig, ReplicationMethod, UseOfProfit, Domicile } from '@/lib/types';
 import {
   Dialog,
   DialogContent,
@@ -9,12 +9,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from './ui/dialog';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Button } from './ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus } from 'lucide-react';
-import { useEtfForm } from '../hooks/useEtfForm';
+import { useEtfForm } from '@/hooks/useEtfForm';
 
 interface EtfFormProps {
   onAddEtf: (etf: EtfConfig) => void;
@@ -128,9 +134,9 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Physical">Physical</SelectItem>
-                  <SelectItem value="Synthetic">Synthetic</SelectItem>
-                  <SelectItem value="Optimized">Optimized</SelectItem>
+                  <SelectItem value="Physical">{t.etfProperties.Physical}</SelectItem>
+                  <SelectItem value="Synthetic">{t.etfProperties.Synthetic}</SelectItem>
+                  <SelectItem value="Optimized">{t.etfProperties.Optimized}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -144,8 +150,8 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Accumulating">Accumulating</SelectItem>
-                  <SelectItem value="Distributing">Distributing</SelectItem>
+                  <SelectItem value="Accumulating">{t.etfProperties.Accumulating}</SelectItem>
+                  <SelectItem value="Distributing">{t.etfProperties.Distributing}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -183,10 +189,10 @@ export default function EtfForm({ onAddEtf }: EtfFormProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Ireland">Ireland</SelectItem>
-                <SelectItem value="Luxembourg">Luxembourg</SelectItem>
-                <SelectItem value="US">US</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
+                <SelectItem value="Ireland">{t.etfProperties.Ireland}</SelectItem>
+                <SelectItem value="Luxembourg">{t.etfProperties.Luxembourg}</SelectItem>
+                <SelectItem value="US">{t.etfProperties.US}</SelectItem>
+                <SelectItem value="Other">{t.sectors.Other}</SelectItem>
               </SelectContent>
             </Select>
           </div>

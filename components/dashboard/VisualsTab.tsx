@@ -1,27 +1,38 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { EtfConfig } from '../../lib/types';
-import { useTranslation } from '../../lib/i18n/LanguageContext';
-import { Label } from '../ui/label';
-import { Slider } from '../ui/slider';
-import { Switch } from '../ui/switch';
+import { EtfConfig } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
 import { Maximize2, Minimize2, Play, Pause, ZoomIn, ZoomOut } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { BASE_COORDINATES, ALIASES } from '../../lib/utils/Coordinates';
-import type { ExposureGlobeRef } from '../charts/ExposureGlobe';
+import { BASE_COORDINATES, ALIASES } from '@/lib/utils/Coordinates';
+import type { ExposureGlobeRef } from '@/components/charts/3d/GlobeExpusureChart/ExposureGlobe';
 
 const ExposureGlobe = dynamic(
-  () => import('../charts/ExposureGlobe').then((mod) => mod.ExposureGlobe),
+  () =>
+    import('@/components/charts/3d/GlobeExpusureChart/ExposureGlobe').then(
+      (mod) => mod.ExposureGlobe
+    ),
   {
     ssr: false,
-    loading: () => <div className="h-[600px] bg-card animate-pulse border border-border" />,
+    loading: () => <div className="h-150 bg-card animate-pulse border border-border" />,
   }
 );
 
 const NetworkGraph = dynamic(
-  () => import('../charts/NetworkGraph').then((mod) => mod.NetworkGraph),
+  () => import('@/components/charts/3d/NetworkGraph').then((mod) => mod.NetworkGraph),
   {
     ssr: false,
-    loading: () => <div className="h-[600px] bg-card animate-pulse border border-border" />,
+    loading: () => <div className="h-150 bg-card animate-pulse border border-border" />,
+  }
+);
+
+const Cityscape = dynamic(
+  () => import('@/components/charts/3d/CityscapeChart/Cityscape').then((mod) => mod.Cityscape),
+  {
+    ssr: false,
+    loading: () => <div className="h-150 bg-card animate-pulse border border-border" />,
   }
 );
 
@@ -34,7 +45,7 @@ interface VisualsTabProps {
 
 export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: VisualsTabProps) {
   const { t } = useTranslation();
-  const [active3DVisual, setActive3DVisual] = useState<'Globe' | 'Network'>('Globe');
+  const [active3DVisual, setActive3DVisual] = useState<'Globe' | 'Network' | 'City'>('City');
 
   // Globe controls state
   const [globeRotating, setGlobeRotating] = useState(true);
@@ -72,6 +83,12 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
           >
             {t.overviewTab.concentrationNetwork}
           </button>
+          <button
+            onClick={() => setActive3DVisual('City')}
+            className={`px-4 py-1.5 text-sm rounded-md font-medium transition-colors ${active3DVisual === 'City' ? 'bg-background shadow text-foreground' : 'text-muted-foreground'}`}
+          >
+            {t.threeDVisuals.treemapCity}
+          </button>
         </div>
         {onToggleFullscreen && (
           <button
@@ -86,7 +103,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
       {active3DVisual === 'Globe' ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row justify-between gap-6 p-4 bg-muted/30 rounded-lg border border-border items-center">
-            <div className="flex flex-col gap-2 min-w-[140px]">
+            <div className="flex flex-col gap-2 min-w-35">
               <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
                 {t.threeDVisuals.regionsActive}
               </Label>
@@ -132,7 +149,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
           </div>
           <ExposureGlobe ref={globeRef} data={geoData} isRotating={globeRotating} />
         </div>
-      ) : (
+      ) : active3DVisual === 'Network' ? (
         <div className="flex flex-col gap-4">
           <div className="flex flex-col md:flex-row justify-between gap-6 p-4 bg-muted/30 rounded-lg border border-border">
             <div className="flex-1 space-y-2">
@@ -153,7 +170,7 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
                 className="py-2"
               />
             </div>
-            <div className="flex flex-col gap-2 min-w-[140px]">
+            <div className="flex flex-col gap-2 min-w-35">
               <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
                 {t.threeDVisuals.displayMode}
               </Label>
@@ -197,7 +214,35 @@ export function VisualsTab({ etfs, geoData, isFullscreen, onToggleFullscreen }: 
             overlapOnly={networkOverlapOnly}
           />
         </div>
-      )}
+      ) : active3DVisual === 'City' ? (
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col md:flex-row justify-between gap-6 p-4 bg-muted/30 rounded-lg border border-border items-center">
+            <div className="flex flex-col gap-2 min-w-35">
+              <Label className="text-xs font-bold uppercase tracking-widest text-foreground">
+                {t.threeDVisuals.treemapCity}
+              </Label>
+              <span className="text-sm font-medium text-amber-500">
+                {etfs.reduce(
+                  (acc, etf) => acc + (etf.globalWeight > 0 ? etf.holdings.length : 0),
+                  0
+                )}{' '}
+                {t.threeDVisuals.holdingsRendered}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setGlobeRotating(!globeRotating)}
+                className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium bg-background hover:bg-muted text-foreground rounded-lg transition-colors border border-border"
+              >
+                {globeRotating ? <Pause size={14} /> : <Play size={14} />}
+                {globeRotating ? t.threeDVisuals.pauseRotation : t.threeDVisuals.resumeRotation}
+              </button>
+            </div>
+          </div>
+          <Cityscape etfs={etfs} isRotating={globeRotating} />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -4,9 +4,8 @@ import React, { Suspense, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
-import { Card, CardContent } from '../ui/card';
-import { GlobeMesh } from './globe/GlobeMesh';
-import { BASE_COORDINATES, ALIASES } from '../../lib/utils/Coordinates';
+import { Card, CardContent } from '@/components/ui/card';
+import { GlobeMesh } from '@/components/charts/3d/GlobeExpusureChart/GlobeMesh';
 
 export interface ExposureGlobeRef {
   zoomIn: () => void;
@@ -17,6 +16,7 @@ export const ExposureGlobe = forwardRef<
   ExposureGlobeRef,
   { data: { name: string; value: number }[]; isRotating: boolean }
 >(({ data, isRotating }, ref) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const controlsRef = useRef<any>(null);
 
   useImperativeHandle(ref, () => ({
@@ -39,17 +39,10 @@ export const ExposureGlobe = forwardRef<
     }
   };
 
-  // Calculate true number of mapped unique regions
-  const uniqueRegionsCount = new Set(
-    data
-      .map((d) => ALIASES[d.name.trim()] || d.name.trim())
-      .filter((name) => name !== 'Unknown' && name !== 'Unione Europea' && BASE_COORDINATES[name])
-  ).size;
-
   return (
     <Card className="p-0 hover:border-primary/50 transition-colors duration-500 border border-border bg-card/40 backdrop-blur-md overflow-hidden">
       <CardContent className="p-0">
-        <div className="h-[600px] w-full relative bg-[#030712] overflow-hidden">
+        <div className="h-150 w-full relative bg-[#030712] overflow-hidden">
           <Canvas camera={{ position: [0, 0, 6], fov: 45 }}>
             <ambientLight intensity={0.6} />
             <pointLight position={[10, 10, 10]} intensity={2.0} color="#ffffff" />

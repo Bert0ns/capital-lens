@@ -1,7 +1,6 @@
 import React from 'react';
-import { ConcentrationChart } from '../charts/ConcentrationChart';
-import { DistributionChart } from '../charts/DistributionChart';
-import { useTranslation } from '../../lib/i18n/LanguageContext';
+import { ConcentrationChart } from '@/components/charts/ConcentrationChart';
+import { DistributionChart } from '@/components/charts/DistributionChart';
 
 type ChartData = { name: string; value: number }[];
 
@@ -14,8 +13,6 @@ export function RiskAnalysisTab({
   concentrationData,
   weightDistributionData,
 }: RiskAnalysisTabProps) {
-  const { t } = useTranslation();
-
   return (
     <>
       <div className="lg:col-span-2 transition-transform hover:scale-[1.01] duration-300">

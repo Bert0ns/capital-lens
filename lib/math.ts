@@ -1,4 +1,4 @@
-import { EtfConfig } from './types';
+import { EtfConfig } from '@/lib/types';
 
 export interface AggregationResult {
   name: string;
@@ -11,21 +11,29 @@ const SECTOR_MAPPINGS: { matchers: RegExp[]; result: string }[] = [
   { matchers: [/industr/, /industrali/], result: 'Industrials' },
   { matchers: [/health/, /sanità/, /sanita/, /cura/, /salute/], result: 'Healthcare' },
   {
-    matchers: [/discrezionali/, /discretionary/, /cyclical/, /consumer services/],
+    matchers: [/discrezionali/, /discretionary/, /cyclical/, /consumer services/, /voluttuari/],
     result: 'Consumer Discretionary',
   },
   {
-    matchers: [/staples/, /beni di consumo/, /defensive/, /consumer goods/],
+    matchers: [
+      /staples/,
+      /beni di consumo/,
+      /defensive/,
+      /consumer goods/,
+      /prima necessit/,
+      /largo consumo/,
+    ],
     result: 'Consumer Staples',
   },
   { matchers: [/material/, /materie prime/], result: 'Materials' },
   { matchers: [/energ/], result: 'Energy' },
   { matchers: [/utilit/, /pubblica utilit\u00e0/], result: 'Utilities' },
   { matchers: [/communication/, /telecom/, /comunicazion/], result: 'Communication Services' },
-  { matchers: [/real estate/, /immobiliare/, /property/], result: 'Real Estate' },
+  { matchers: [/real estate/, /immobili/, /property/], result: 'Real Estate' },
+  { matchers: [/cash/, /liquid/, /contant/, /derivat/], result: 'Cash' },
 ];
 
-function normalizeSector(sector: string): string {
+export function normalizeSector(sector: string): string {
   if (!sector || sector === 'Unknown' || sector === 'N/A') return 'Unknown';
 
   const s = sector.trim().toLowerCase();
