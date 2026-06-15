@@ -18,6 +18,23 @@ interface DiversificationChartsProps {
   etfs: EtfConfig[];
 }
 
+// Helper for bar chart colors based on uniqueness score
+const getUniquenessColor = (score: number) => {
+  if (score >= 50) return '#10b981'; // emerald-500
+  if (score >= 20) return '#f59e0b'; // amber-500
+  return '#ef4444'; // red-500
+};
+
+// Helper for heatmap colors based on overlap percentage
+const getHeatmapColor = (overlap: number) => {
+  if (overlap === 100) return 'bg-muted text-muted-foreground font-bold';
+  if (overlap >= 80) return 'bg-destructive/90 text-destructive-foreground';
+  if (overlap >= 50) return 'bg-destructive/60 text-foreground';
+  if (overlap >= 25) return 'bg-orange-500/40 text-foreground';
+  if (overlap >= 10) return 'bg-yellow-500/20 text-foreground';
+  return 'bg-background text-muted-foreground';
+};
+
 export function DiversificationCharts({ etfs }: DiversificationChartsProps) {
   const { t } = useTranslation();
 
@@ -26,6 +43,16 @@ export function DiversificationCharts({ etfs }: DiversificationChartsProps) {
 
   const uniquenessResults = useMemo(() => calculateUniqueness(activeEtfs), [activeEtfs]);
   const overlapMatrix = useMemo(() => generateOverlapMatrix(activeEtfs), [activeEtfs]);
+
+  // Build a 2D array for the matrix
+  const matrix = useMemo(() => {
+    const map: Record<string, Record<string, number>> = {};
+    for (const item of overlapMatrix) {
+      if (!map[item.etfId1]) map[item.etfId1] = {};
+      map[item.etfId1][item.etfId2] = item.overlapPercent;
+    }
+    return map;
+  }, [overlapMatrix]);
 
   // If there's only 1 or 0 ETFs, the matrix and uniqueness aren't very useful
   if (activeEtfs.length <= 1) {
@@ -39,29 +66,6 @@ export function DiversificationCharts({ etfs }: DiversificationChartsProps) {
         </Card>
       </div>
     );
-  }
-
-  // Bar chart colors based on uniqueness score (e.g., green for high, yellow for mid, red for low)
-  const getUniquenessColor = (score: number) => {
-    if (score >= 50) return '#10b981'; // emerald-500
-    if (score >= 20) return '#f59e0b'; // amber-500
-    return '#ef4444'; // red-500
-  };
-
-  const getHeatmapColor = (overlap: number) => {
-    if (overlap === 100) return 'bg-muted text-muted-foreground font-bold';
-    if (overlap >= 80) return 'bg-destructive/90 text-destructive-foreground';
-    if (overlap >= 50) return 'bg-destructive/60 text-foreground';
-    if (overlap >= 25) return 'bg-orange-500/40 text-foreground';
-    if (overlap >= 10) return 'bg-yellow-500/20 text-foreground';
-    return 'bg-background text-muted-foreground';
-  };
-
-  // Build a 2D array for the matrix
-  const matrix: { [key: string]: { [key: string]: number } } = {};
-  for (const item of overlapMatrix) {
-    if (!matrix[item.etfId1]) matrix[item.etfId1] = {};
-    matrix[item.etfId1][item.etfId2] = item.overlapPercent;
   }
 
   return (

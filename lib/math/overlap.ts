@@ -49,11 +49,24 @@ export function calculatePairwiseOverlap(etf1: EtfConfig, etf2: EtfConfig): numb
 export function generateOverlapMatrix(etfs: EtfConfig[]): OverlapMatrixResult[] {
   const results: OverlapMatrixResult[] = [];
 
-  for (let i = 0; i < etfs.length; i++) {
-    for (let j = i + 1; j < etfs.length; j++) {
-      const etf1 = etfs[i];
-      const etf2 = etfs[j];
-      const overlap = calculatePairwiseOverlap(etf1, etf2);
+  // Precompute weight maps to avoid redundant map building in nested loops
+  const etfMaps = etfs.map((etf) => ({
+    etf,
+    map: buildWeightMap(etf),
+  }));
+
+  for (let i = 0; i < etfMaps.length; i++) {
+    for (let j = i + 1; j < etfMaps.length; j++) {
+      const { etf: etf1, map: map1 } = etfMaps[i];
+      const { etf: etf2, map: map2 } = etfMaps[j];
+
+      let overlap = 0;
+      for (const [key, weight1] of map1.entries()) {
+        const weight2 = map2.get(key);
+        if (weight2 !== undefined) {
+          overlap += Math.min(weight1, weight2);
+        }
+      }
 
       results.push({
         etfId1: etf1.id,
@@ -74,10 +87,10 @@ export function generateOverlapMatrix(etfs: EtfConfig[]): OverlapMatrixResult[] 
 
     // Self-overlap
     results.push({
-      etfId1: etfs[i].id,
-      etfName1: etfs[i].name,
-      etfId2: etfs[i].id,
-      etfName2: etfs[i].name,
+      etfId1: etfMaps[i].etf.id,
+      etfName1: etfMaps[i].etf.name,
+      etfId2: etfMaps[i].etf.id,
+      etfName2: etfMaps[i].etf.name,
       overlapPercent: 100,
     });
   }
