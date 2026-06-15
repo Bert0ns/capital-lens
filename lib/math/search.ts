@@ -103,7 +103,14 @@ export function searchByCountry(etfs: EtfConfig[], query: string): CountrySearch
 
   iterateHoldings(etfs, (etf, holding, globalMultiplier) => {
     const canonCountry = normalizeCountry(String(holding.country || 'Unknown'));
-    if (canonCountry === 'Unknown' || !canonCountry.toLowerCase().includes(lowerQuery)) return;
+    if (canonCountry === 'Unknown') return;
+
+    const originalCountry = String(holding.country || '').toLowerCase();
+    const canonCountryLower = canonCountry.toLowerCase();
+
+    if (!canonCountryLower.includes(lowerQuery) && !originalCountry.includes(lowerQuery)) {
+      return;
+    }
 
     let result = resultsMap.get(canonCountry);
     if (!result) {

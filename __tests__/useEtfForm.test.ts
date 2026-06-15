@@ -178,4 +178,123 @@ describe('useEtfForm', () => {
     expect(toast.success).toHaveBeenCalledWith('etfAdded', expect.any(Object));
     expect(result.current.state.name).toBe('');
   });
+
+  it('shows warning if parsed with warnings', async () => {
+    mockParse.mockResolvedValueOnce({
+      holdings: [
+        {
+          ticker: 'AAPL',
+          name: 'Apple',
+          weight: 100,
+          sector: 'IT',
+          country: 'US',
+          currency: 'USD',
+        },
+      ],
+      errors: ['Some random warning'],
+    });
+
+    const { result } = renderHook(() => useEtfForm(mockOnAddEtf));
+
+    await act(async () => {
+      fillForm(result);
+    });
+
+    await act(async () => {
+      await result.current.actions.handleSubmit({
+        preventDefault: jest.fn(),
+      } as unknown as React.FormEvent<HTMLFormElement>);
+    });
+
+    expect(toast.warning).toHaveBeenCalledWith(
+      'parsedWithWarnings',
+      expect.objectContaining({
+        description: expect.stringContaining('Some random warning'),
+      })
+    );
+    expect(mockOnAddEtf).toHaveBeenCalled();
+  });
+
+  it('handles unexpected exceptions', async () => {
+    mockParse.mockRejectedValueOnce(new Error('Unexpected disaster'));
+
+    const { result } = renderHook(() => useEtfForm(mockOnAddEtf));
+
+    await act(async () => {
+      fillForm(result);
+    });
+
+    await act(async () => {
+      await result.current.actions.handleSubmit({
+        preventDefault: jest.fn(),
+      } as unknown as React.FormEvent<HTMLFormElement>);
+    });
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'Error',
+      expect.objectContaining({
+        description: 'Unexpected disaster',
+      })
+    );
+  });
+
+  it('shows error if fund size is invalid', async () => {
+    const { result } = renderHook(() => useEtfForm(mockOnAddEtf));
+
+    await act(async () => {
+      fillForm(result);
+      result.current.actions.setFundSize('-10'); // Invalid fund size
+    });
+
+    await act(async () => {
+      await result.current.actions.handleSubmit({
+        preventDefault: jest.fn(),
+      } as unknown as React.FormEvent<HTMLFormElement>);
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('invalidSize', expect.any(Object));
+  });
+
+  it('shows error if fund age is invalid', async () => {
+    const { result } = renderHook(() => useEtfForm(mockOnAddEtf));
+
+    await act(async () => {
+      fillForm(result);
+      result.current.actions.setFundAge('-1'); // Invalid fund age
+    });
+
+    await act(async () => {
+      await result.current.actions.handleSubmit({
+        preventDefault: jest.fn(),
+      } as unknown as React.FormEvent<HTMLFormElement>);
+    });
+
+    expect(toast.error).toHaveBeenCalledWith('invalidAge', expect.any(Object));
+  });
+
+  it('shows error if parsed file is completely empty (no holdings)', async () => {
+    mockParse.mockResolvedValueOnce({
+      holdings: [],
+      errors: [], // No errors, but no holdings either
+    });
+
+    const { result } = renderHook(() => useEtfForm(mockOnAddEtf));
+
+    await act(async () => {
+      fillForm(result);
+    });
+
+    await act(async () => {
+      await result.current.actions.handleSubmit({
+        preventDefault: jest.fn(),
+      } as unknown as React.FormEvent<HTMLFormElement>);
+    });
+
+    expect(toast.error).toHaveBeenCalledWith(
+      'emptyFile',
+      expect.objectContaining({
+        description: 'emptyFileDesc',
+      })
+    );
+  });
 });

@@ -3,6 +3,7 @@ import {
   calculateAverageTer,
   aggregateTopHoldings,
   searchHoldings,
+  searchByCountry,
   generateNetworkData,
 } from '../lib/math';
 import { EtfConfig } from '@/lib/types';
@@ -395,6 +396,67 @@ describe('Math Utilities', () => {
       expect(results.length).toBe(1);
       expect(results[0].ticker).toBe('N/A');
       expect(results[0].name).toBe('Unknown Corp');
+    });
+  });
+
+  describe('searchByCountry', () => {
+    it('returns empty array if query is empty or whitespace', () => {
+      expect(searchByCountry(mockEtfs, '')).toEqual([]);
+      expect(searchByCountry(mockEtfs, '   ')).toEqual([]);
+    });
+
+    it('returns empty array if no matching country is found', () => {
+      expect(searchByCountry(mockEtfs, 'Italy')).toEqual([]);
+    });
+
+    it('groups results by canonical country name and aggregates correctly', () => {
+      const results = searchByCountry(mockEtfs, 'us'); // Should match 'US' (from AAPL and MSFT)
+
+      expect(results.length).toBe(1);
+      const usResult = results[0];
+
+      expect(usResult.countryName).toBe('United States'); // 'US' should be normalized to 'United States'
+
+      // AAPL in ETF1 (10%), MSFT in ETF1 (5%), AAPL in ETF2 (4%)
+      // All weights * 0.5 (global multiplier)
+      // Total = (10 * 0.5) + (5 * 0.5) + (4 * 0.5) = 5 + 2.5 + 2 = 9.5
+      expect(usResult.totalWeight).toBeCloseTo(9.5);
+
+      // ETF Breakdown
+      expect(usResult.etfBreakdown.length).toBe(2);
+      expect(usResult.etfBreakdown.find((b) => b.etfId === '1')?.contribution).toBeCloseTo(7.5);
+      expect(usResult.etfBreakdown.find((b) => b.etfId === '2')?.contribution).toBeCloseTo(2);
+
+      // Companies Breakdown
+      expect(usResult.companies.length).toBe(2); // AAPL and MSFT
+      const aapl = usResult.companies.find((c) => c.ticker === 'AAPL');
+      expect(aapl?.totalWeight).toBeCloseTo(7); // 5 + 2
+      const msft = usResult.companies.find((c) => c.ticker === 'MSFT');
+      expect(msft?.totalWeight).toBeCloseTo(2.5);
+    });
+
+    it('handles unknown or empty country strings', () => {
+      const customEtfs: EtfConfig[] = [
+        {
+          ...mockEtfs[0],
+          globalWeight: 100,
+          holdings: [
+            {
+              name: 'Mystery Corp',
+              ticker: 'MYS',
+              weight: 100,
+              sector: 'IT',
+              country: '', // empty country
+              currency: 'USD',
+            },
+          ],
+        },
+      ];
+      // Search for unknown should not return anything for empty queries
+      const results = searchByCountry(customEtfs, 'unknown');
+      // The code specifically ignores 'Unknown' canonical country:
+      // if (canonCountry === 'Unknown' || ...) return;
+      expect(results.length).toBe(0);
     });
   });
 
