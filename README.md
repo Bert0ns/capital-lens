@@ -122,13 +122,12 @@ This project is open-source and available under the [MIT License](LICENSE).
 ## 💡 Future Roadmap (Draft Ideas)
 
 1. **Historical Backtesting Chart:** Integration with historical price APIs to chart a simulated backtested growth curve for your exact portfolio configuration over the last 1-5 years.
-2. **Correlation Matrix Heatmap:** A visual heatmap matrix that calculates how closely correlated the ETFs are to one another, helping flag redundancies and ensure true diversification.
-3. **3D Overlap Terrain (Topographic Map)**: Instead of a network, visualize ETF overlap as a 3D topographical map. The X and Y axes represent the different ETFs, and the Z-axis (the  
+2. **3D Overlap Terrain (Topographic Map)**: Instead of a network, visualize ETF overlap as a 3D topographical map. The X and Y axes represent the different ETFs, and the Z-axis (the  
    "mountains") represents the percentage of shared holdings. Highly overlapping portfolios would look like massive mountain ranges, while  
    diversified portfolios would look like flat plains.
-4. **3DSankey "Money Flow" Diagram**: A stunning, flowing Sankey diagram that tracks how a single dollar is split. It starts as one large stream on the left ("Total Portfolio"), splits
+3. **3DSankey "Money Flow" Diagram**: A stunning, flowing Sankey diagram that tracks how a single dollar is split. It starts as one large stream on the left ("Total Portfolio"), splits
    into your ETFs, then flows into Sectors, and finally breaks off into individual top companies. It is the absolute best way to visualize exposure  
    distribution.
-5. **Radar Chart**
-6. **Voronoi Treemap**: Instead of boring rectangular treemaps, Voronoi treemaps use organic, cell-like shapes. It looks like viewing plant cells under a microscope,  
+4. **Radar Chart**
+5. **Voronoi Treemap**: Instead of boring rectangular treemaps, Voronoi treemaps use organic, cell-like shapes. It looks like viewing plant cells under a microscope,  
    where the largest "cells" are your biggest holdings. It looks incredibly premium, especially with our cyberpunk/dark mode styling
