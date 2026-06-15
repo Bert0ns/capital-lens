@@ -1,0 +1,4 @@
+{
+  "ignorePatterns": ["components/ui/**/*"],
+  "ignoreDependencies": ["@base-ui/react", "class-variance-authority"]
+}

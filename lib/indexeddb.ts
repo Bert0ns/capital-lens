@@ -21,43 +21,33 @@ function getDB(): Promise<IDBDatabase> {
   });
 }
 
-export async function setItem(key: string, value: unknown): Promise<void> {
-  if (typeof window === 'undefined') return;
+async function executeRequest<T>(
+  mode: IDBTransactionMode,
+  operation: (store: IDBObjectStore) => IDBRequest<T>
+): Promise<T> {
   const db = await getDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
+    const transaction = db.transaction(STORE_NAME, mode);
     const store = transaction.objectStore(STORE_NAME);
-    const request = store.put(value, key);
+    const request = operation(store);
 
-    request.onsuccess = () => resolve();
+    request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
+}
+
+export async function setItem(key: string, value: unknown): Promise<void> {
+  if (typeof window === 'undefined') return;
+  await executeRequest('readwrite', (store) => store.put(value, key));
 }
 
 export async function getItem<T>(key: string): Promise<T | null> {
   if (typeof window === 'undefined') return null;
-  const db = await getDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readonly');
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.get(key);
-
-    request.onsuccess = () => {
-      resolve(request.result !== undefined ? request.result : null);
-    };
-    request.onerror = () => reject(request.error);
-  });
+  const result = await executeRequest<T>('readonly', (store) => store.get(key));
+  return result !== undefined ? result : null;
 }
 
 export async function removeItem(key: string): Promise<void> {
   if (typeof window === 'undefined') return;
-  const db = await getDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORE_NAME, 'readwrite');
-    const store = transaction.objectStore(STORE_NAME);
-    const request = store.delete(key);
-
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  await executeRequest('readwrite', (store) => store.delete(key));
 }

@@ -285,47 +285,71 @@ export interface HoldingSearchResult {
   }[];
 }
 
+function updateHoldingBreakdown(
+  companiesList: HoldingSearchResult[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  holding: any,
+  etf: EtfConfig,
+  contribution: number
+) {
+  const compKey = holding.ticker !== 'N/A' ? holding.ticker : holding.name;
+  let comp = companiesList.find((c) =>
+    c.ticker !== 'N/A' ? c.ticker === compKey : c.name === compKey
+  );
+  if (!comp) {
+    comp = { ticker: holding.ticker, name: holding.name, totalWeight: 0, breakdown: [] };
+    companiesList.push(comp);
+  }
+  comp.totalWeight += contribution;
+
+  let compEtfBreak = comp.breakdown.find((b) => b.etfId === etf.id);
+  if (!compEtfBreak) {
+    compEtfBreak = { etfId: etf.id, etfName: etf.name, contribution: 0, internalWeight: 0 };
+    comp.breakdown.push(compEtfBreak);
+  }
+  compEtfBreak.contribution += contribution;
+  compEtfBreak.internalWeight += holding.weight;
+  return comp;
+}
+
+function iterateHoldings(
+  etfs: EtfConfig[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  callback: (etf: EtfConfig, holding: any, globalMultiplier: number) => void
+) {
+  for (const etf of etfs) {
+    if (etf.globalWeight <= 0) continue;
+    const globalMultiplier = etf.globalWeight / 100;
+    for (const holding of etf.holdings) {
+      callback(etf, holding, globalMultiplier);
+    }
+  }
+}
+
 export function searchHoldings(etfs: EtfConfig[], query: string): HoldingSearchResult[] {
   if (!query || query.trim() === '') return [];
 
   const lowerQuery = query.toLowerCase().trim();
-  // Map of normalized key (either Ticker or Name) to the result object
   const resultsMap = new Map<string, HoldingSearchResult>();
 
-  for (const etf of etfs) {
-    if (etf.globalWeight <= 0) continue;
-    const globalMultiplier = etf.globalWeight / 100;
+  iterateHoldings(etfs, (etf, holding, globalMultiplier) => {
+    const matchName = holding.name.toLowerCase().includes(lowerQuery);
+    const matchTicker =
+      holding.ticker !== 'N/A' && holding.ticker.toLowerCase().includes(lowerQuery);
 
-    for (const holding of etf.holdings) {
-      const matchName = holding.name.toLowerCase().includes(lowerQuery);
-      const matchTicker =
-        holding.ticker !== 'N/A' && holding.ticker.toLowerCase().includes(lowerQuery);
+    if (!matchName && !matchTicker) return;
 
-      if (!matchName && !matchTicker) continue;
+    const key = holding.ticker !== 'N/A' ? holding.ticker : holding.name;
+    const contribution = holding.weight * globalMultiplier;
 
-      const key = holding.ticker !== 'N/A' ? holding.ticker : holding.name;
-
-      let result = resultsMap.get(key);
-      if (!result) {
-        result = { ticker: holding.ticker, name: holding.name, totalWeight: 0, breakdown: [] };
-        resultsMap.set(key, result);
-      }
-
-      const contribution = holding.weight * globalMultiplier;
-      result.totalWeight += contribution;
-
-      let breakdown = result.breakdown.find((b) => b.etfId === etf.id);
-      if (!breakdown) {
-        breakdown = { etfId: etf.id, etfName: etf.name, contribution: 0, internalWeight: 0 };
-        result.breakdown.push(breakdown);
-      }
-
-      breakdown.contribution += contribution;
-      breakdown.internalWeight += holding.weight;
+    let result = resultsMap.get(key);
+    const companiesList = result ? [result] : [];
+    result = updateHoldingBreakdown(companiesList, holding, etf, contribution);
+    if (!resultsMap.has(key)) {
+      resultsMap.set(key, result);
     }
-  }
+  });
 
-  // Convert to array and sort by highest total weight
   return Array.from(resultsMap.values()).sort((a, b) => b.totalWeight - a.totalWeight);
 }
 
@@ -346,50 +370,30 @@ export function searchByCountry(etfs: EtfConfig[], query: string): CountrySearch
   const lowerQuery = query.toLowerCase().trim();
   const resultsMap = new Map<string, CountrySearchResult>();
 
-  for (const etf of etfs) {
-    if (etf.globalWeight <= 0) continue;
-    const globalMultiplier = etf.globalWeight / 100;
+  iterateHoldings(etfs, (etf, holding, globalMultiplier) => {
+    const canonCountry = normalizeCountry(String(holding.country || 'Unknown'));
+    if (canonCountry === 'Unknown' || !canonCountry.toLowerCase().includes(lowerQuery)) return;
 
-    for (const holding of etf.holdings) {
-      const canonCountry = normalizeCountry(String(holding.country || 'Unknown'));
-      if (canonCountry === 'Unknown' || !canonCountry.toLowerCase().includes(lowerQuery)) continue;
-
-      let result = resultsMap.get(canonCountry);
-      if (!result) {
-        result = { countryName: canonCountry, totalWeight: 0, etfBreakdown: [], companies: [] };
-        resultsMap.set(canonCountry, result);
-      }
-
-      const contribution = holding.weight * globalMultiplier;
-      result.totalWeight += contribution;
-
-      // Update ETF breakdown
-      let etfBreak = result.etfBreakdown.find((b) => b.etfId === etf.id);
-      if (!etfBreak) {
-        etfBreak = { etfId: etf.id, etfName: etf.name, contribution: 0 };
-        result.etfBreakdown.push(etfBreak);
-      }
-      etfBreak.contribution += contribution;
-
-      // Update Companies breakdown
-      const compKey = holding.ticker !== 'N/A' ? holding.ticker : holding.name;
-      let comp = result.companies.find((c) =>
-        c.ticker !== 'N/A' ? c.ticker === compKey : c.name === compKey
-      );
-      if (!comp) {
-        comp = { ticker: holding.ticker, name: holding.name, totalWeight: 0, breakdown: [] };
-        result.companies.push(comp);
-      }
-      comp.totalWeight += contribution;
-      let compEtfBreak = comp.breakdown.find((b) => b.etfId === etf.id);
-      if (!compEtfBreak) {
-        compEtfBreak = { etfId: etf.id, etfName: etf.name, contribution: 0, internalWeight: 0 };
-        comp.breakdown.push(compEtfBreak);
-      }
-      compEtfBreak.contribution += contribution;
-      compEtfBreak.internalWeight += holding.weight;
+    let result = resultsMap.get(canonCountry);
+    if (!result) {
+      result = { countryName: canonCountry, totalWeight: 0, etfBreakdown: [], companies: [] };
+      resultsMap.set(canonCountry, result);
     }
-  }
+
+    const contribution = holding.weight * globalMultiplier;
+    result.totalWeight += contribution;
+
+    // Update ETF breakdown
+    let etfBreak = result.etfBreakdown.find((b) => b.etfId === etf.id);
+    if (!etfBreak) {
+      etfBreak = { etfId: etf.id, etfName: etf.name, contribution: 0 };
+      result.etfBreakdown.push(etfBreak);
+    }
+    etfBreak.contribution += contribution;
+
+    // Update Companies breakdown
+    updateHoldingBreakdown(result.companies, holding, etf, contribution);
+  });
 
   return Array.from(resultsMap.values())
     .map((res) => {

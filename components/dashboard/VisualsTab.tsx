@@ -45,6 +45,25 @@ interface VisualsTabProps {
   isActive?: boolean;
 }
 
+const RotationControls = ({
+  isRotating,
+  onToggle,
+  t,
+}: {
+  isRotating: boolean;
+  onToggle: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  t: any;
+}) => (
+  <button
+    onClick={onToggle}
+    className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium bg-background hover:bg-muted text-foreground rounded-lg transition-colors border border-border"
+  >
+    {isRotating ? <Pause size={14} /> : <Play size={14} />}
+    {isRotating ? t.threeDVisuals.pauseRotation : t.threeDVisuals.resumeRotation}
+  </button>
+);
+
 export function VisualsTab({
   etfs,
   geoData,
@@ -139,13 +158,11 @@ export function VisualsTab({
             </div>
 
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setGlobeRotating(!globeRotating)}
-                className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium bg-background hover:bg-muted text-foreground rounded-lg transition-colors border border-border"
-              >
-                {globeRotating ? <Pause size={14} /> : <Play size={14} />}
-                {globeRotating ? t.threeDVisuals.pauseRotation : t.threeDVisuals.resumeRotation}
-              </button>
+              <RotationControls
+                isRotating={globeRotating}
+                onToggle={() => setGlobeRotating(!globeRotating)}
+                t={t}
+              />
               <div className="flex gap-2">
                 <button
                   onClick={() => globeRef.current?.zoomIn()}
@@ -250,13 +267,11 @@ export function VisualsTab({
             </div>
 
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setGlobeRotating(!globeRotating)}
-                className="flex items-center justify-center gap-2 px-3 py-2 text-xs font-medium bg-background hover:bg-muted text-foreground rounded-lg transition-colors border border-border"
-              >
-                {globeRotating ? <Pause size={14} /> : <Play size={14} />}
-                {globeRotating ? t.threeDVisuals.pauseRotation : t.threeDVisuals.resumeRotation}
-              </button>
+              <RotationControls
+                isRotating={globeRotating}
+                onToggle={() => setGlobeRotating(!globeRotating)}
+                t={t}
+              />
             </div>
           </div>
           {isActive && <Cityscape etfs={etfs} isRotating={globeRotating} />}

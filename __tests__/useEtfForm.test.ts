@@ -22,6 +22,15 @@ jest.mock('../lib/i18n/LanguageContext', () => ({
   useTranslation: jest.fn(),
 }));
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const fillForm = (result: any) => {
+  result.current.actions.setName('Test');
+  result.current.actions.setTer('0.1');
+  result.current.actions.setFundSize('100');
+  result.current.actions.setFundAge('5');
+  result.current.actions.setFile(new File([''], 'test.csv'));
+};
+
 describe('useEtfForm', () => {
   const mockOnAddEtf = jest.fn();
   const mockParse = jest.fn();
@@ -88,11 +97,8 @@ describe('useEtfForm', () => {
     const { result } = renderHook(() => useEtfForm(mockOnAddEtf));
 
     await act(async () => {
-      result.current.actions.setName('Test');
-      result.current.actions.setTer('invalid'); // Invalid TER
-      result.current.actions.setFundSize('100');
-      result.current.actions.setFundAge('5');
-      result.current.actions.setFile(new File([''], 'test.csv'));
+      fillForm(result);
+      result.current.actions.setTer('invalid'); // Override to invalid TER
     });
 
     await act(async () => {
@@ -113,11 +119,7 @@ describe('useEtfForm', () => {
     const { result } = renderHook(() => useEtfForm(mockOnAddEtf));
 
     await act(async () => {
-      result.current.actions.setName('Test');
-      result.current.actions.setTer('0.1');
-      result.current.actions.setFundSize('100');
-      result.current.actions.setFundAge('5');
-      result.current.actions.setFile(new File([''], 'test.csv'));
+      fillForm(result);
     });
 
     await act(async () => {
@@ -152,12 +154,8 @@ describe('useEtfForm', () => {
     const { result } = renderHook(() => useEtfForm(mockOnAddEtf));
 
     await act(async () => {
-      result.current.actions.setName('Test');
+      fillForm(result);
       result.current.actions.setIsin('US123456');
-      result.current.actions.setTer('0.1');
-      result.current.actions.setFundSize('100');
-      result.current.actions.setFundAge('5');
-      result.current.actions.setFile(new File([''], 'test.csv'));
     });
 
     await act(async () => {

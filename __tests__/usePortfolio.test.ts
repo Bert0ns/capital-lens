@@ -45,6 +45,25 @@ global.fetch = jest.fn(() =>
   })
 ) as jest.Mock;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createMockEtf = (overrides: Partial<any> = {}) =>
+  ({
+    id: '123',
+    name: 'Test ETF',
+    isin: 'IE0012345678',
+    issuer: 'Vanguard',
+    ter: 0.1,
+    globalWeight: 100,
+    replicationMethod: 'Physical',
+    useOfProfit: 'Accumulating',
+    domicile: 'Ireland',
+    fundAge: 5,
+    fundSize: 1000,
+    holdings: [],
+    ...overrides,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }) as any;
+
 describe('usePortfolio Hook', () => {
   beforeEach(() => {
     window.localStorage.clear();
@@ -76,20 +95,7 @@ describe('usePortfolio Hook', () => {
     // so we just rely on the fact that the hook handles it.
     // Let's just override isLoaded in the test by seeding valid data
     act(() => {
-      result.current.addEtf({
-        id: '123',
-        name: 'Test ETF',
-        isin: 'IE0012345678',
-        issuer: 'Vanguard',
-        ter: 0.1,
-        globalWeight: 100,
-        replicationMethod: 'Physical',
-        useOfProfit: 'Accumulating',
-        domicile: 'Ireland',
-        fundAge: 5,
-        fundSize: 1000,
-        holdings: [],
-      });
+      result.current.addEtf(createMockEtf());
     });
 
     // Dummy + New ETF = 2
@@ -122,20 +128,7 @@ describe('usePortfolio Hook', () => {
     // Wait, the hook sets state synchronously if we could, but it uses useEffect.
     // In test environment with strict mode, it's better to just add it and test.
     act(() => {
-      result.current.addEtf({
-        id: 'abc',
-        name: 'Test ETF 2',
-        isin: 'IE0012345678',
-        issuer: 'Vanguard',
-        ter: 0.1,
-        globalWeight: 50,
-        replicationMethod: 'Physical',
-        useOfProfit: 'Accumulating',
-        domicile: 'Ireland',
-        fundAge: 5,
-        fundSize: 1000,
-        holdings: [],
-      });
+      result.current.addEtf(createMockEtf({ id: 'abc', name: 'Test ETF 2', globalWeight: 50 }));
     });
 
     act(() => {
@@ -153,20 +146,9 @@ describe('usePortfolio Hook', () => {
     });
 
     act(() => {
-      result.current.addEtf({
-        id: 'to-remove',
-        name: 'Remove Me',
-        isin: 'IE0012345678',
-        issuer: 'Vanguard',
-        ter: 0.1,
-        globalWeight: 100,
-        replicationMethod: 'Physical',
-        useOfProfit: 'Accumulating',
-        domicile: 'Ireland',
-        fundAge: 5,
-        fundSize: 1000,
-        holdings: [],
-      });
+      result.current.addEtf(
+        createMockEtf({ id: 'to-remove', name: 'Remove Me', globalWeight: 100 })
+      );
     });
 
     expect(result.current.etfs.length).toBeGreaterThan(0);

@@ -1,12 +1,12 @@
 import { EtfConfig } from '@/lib/types';
 import { normalizeSector } from '@/lib/math';
 
-export interface HoldingData {
+interface HoldingData {
   name: string;
   value: number;
 }
 
-export interface SectorGroup {
+interface SectorGroup {
   name: string;
   value: number;
   children: HoldingData[];
@@ -58,7 +58,7 @@ const SECTOR_COLORS: Record<string, string> = {
   Unknown: '#71717a',
 };
 
-export function getSectorColor(sector: string): string {
+function getSectorColor(sector: string): string {
   if (SECTOR_COLORS[sector]) return SECTOR_COLORS[sector];
   let hash = 0;
   for (let i = 0; i < sector.length; i++) {

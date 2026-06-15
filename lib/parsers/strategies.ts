@@ -135,7 +135,7 @@ const PARSER_CONFIGS: Record<string, ParserConfig> = {
   },
 };
 
-export class GenericCsvParser implements CsvParserStrategy {
+class GenericCsvParser implements CsvParserStrategy {
   constructor(private config: ParserConfig) {}
 
   async parse(file: File): Promise<ParseResult> {
