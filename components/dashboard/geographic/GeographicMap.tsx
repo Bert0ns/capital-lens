@@ -71,7 +71,7 @@ export function GeographicMap({ mapData, onCountryClick }: GeographicMapProps) {
                   <WorldMap
                     color="#3b82f6"
                     backgroundColor="transparent"
-                    borderColor={resolvedTheme === 'theme-cyberpunk' ? '#ffffff' : '#0f172a'}
+                    borderColor={resolvedTheme === 'theme-cyberpunk' ? '#d9e4ff' : '#0f172a'}
                     strokeOpacity={0.9}
                     valueSuffix="%"
                     size="responsive"

@@ -79,10 +79,40 @@ const COUNTRY_MAPPINGS: { matchers: RegExp[]; result: string }[] = [
   { matchers: [/irlanda/, /ireland/i], result: 'Ireland' },
 ];
 
+const ISO_TO_COUNTRY: Record<string, string> = {
+  us: 'United States',
+  jp: 'Japan',
+  gb: 'United Kingdom',
+  uk: 'United Kingdom',
+  fr: 'France',
+  de: 'Germany',
+  ch: 'Switzerland',
+  ca: 'Canada',
+  au: 'Australia',
+  nl: 'Netherlands',
+  se: 'Sweden',
+  dk: 'Denmark',
+  es: 'Spain',
+  it: 'Italy',
+  hk: 'Hong Kong',
+  cn: 'China',
+  tw: 'Taiwan',
+  kr: 'South Korea',
+  in: 'India',
+  br: 'Brazil',
+  mx: 'Mexico',
+  za: 'South Africa',
+  ie: 'Ireland',
+};
+
 export function normalizeCountry(country: string): string {
   if (!country || country === 'Unknown' || country === 'N/A' || country === '-') return 'Unknown';
 
   const c = country.trim().toLowerCase();
+
+  if (c.length === 2 && ISO_TO_COUNTRY[c]) {
+    return ISO_TO_COUNTRY[c];
+  }
 
   for (const mapping of COUNTRY_MAPPINGS) {
     if (mapping.matchers.some((matcher) => matcher.test(c))) {
