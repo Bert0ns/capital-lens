@@ -1,84 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { EtfConfig, Issuer, ReplicationMethod, UseOfProfit, Domicile } from '@/lib/types';
+import { EtfConfig } from '@/lib/types';
 import { getCsvParser } from '@/lib/parsers';
 import { toast } from 'sonner';
 import { getItem, setItem } from '@/lib/indexeddb';
 import { generateId } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { DEFAULT_ETFS, STORAGE_KEY } from './constants';
 
-const STORAGE_KEY = 'etf_portfolio_data';
-
-const DEFAULT_ETFS = [
-  {
-    name: 'Vanguard North America',
-    issuer: 'Vanguard' as Issuer,
-    isin: 'IE00BK5BQW10',
-    ter: 0.08,
-    path: '/static/example_csv/vanguard-north-america.csv',
-    weight: 25,
-    replicationMethod: 'Physical' as ReplicationMethod,
-    fundSize: 2613,
-    fundAge: 7,
-    useOfProfit: 'Accumulating' as UseOfProfit,
-    domicile: 'Ireland' as Domicile,
-  },
-  {
-    name: 'Amundi Stoxx Europe 600',
-    issuer: 'Amundi' as Issuer,
-    isin: 'LU0908500753',
-    ter: 0.07,
-    path: '/static/example_csv/amundi-stoxx-europe-600.csv',
-    weight: 30,
-    replicationMethod: 'Physical' as ReplicationMethod,
-    fundSize: 19220,
-    fundAge: 13,
-    useOfProfit: 'Accumulating' as UseOfProfit,
-    domicile: 'Luxembourg' as Domicile,
-  },
-  {
-    name: 'Amundi Prime Japan',
-    issuer: 'Amundi' as Issuer,
-    isin: 'LU2089238385',
-    ter: 0.05,
-    path: '/static/example_csv/amundi-prime-japan.csv',
-    weight: 5,
-    replicationMethod: 'Physical' as ReplicationMethod,
-    fundSize: 570,
-    fundAge: 6,
-    useOfProfit: 'Accumulating' as UseOfProfit,
-    domicile: 'Luxembourg' as Domicile,
-  },
-  {
-    name: 'iShares MSCI EM',
-    issuer: 'iShares' as Issuer,
-    isin: 'IE00BKM4GZ66',
-    ter: 0.18,
-    path: '/static/example_csv/ishares-msci-em.csv',
-    weight: 20,
-    replicationMethod: 'Physical' as ReplicationMethod,
-    fundSize: 36407,
-    fundAge: 12,
-    useOfProfit: 'Accumulating' as UseOfProfit,
-    domicile: 'Ireland' as Domicile,
-  },
-  {
-    name: 'iShares MSCI Pacific ex-Japan',
-    issuer: 'iShares' as Issuer,
-    isin: 'IE00B52MJY50',
-    ter: 0.2,
-    path: '/static/example_csv/ishares-msci-pacific.csv',
-    weight: 20,
-    replicationMethod: 'Physical' as ReplicationMethod,
-    fundSize: 3131,
-    fundAge: 16,
-    useOfProfit: 'Accumulating' as UseOfProfit,
-    domicile: 'Ireland' as Domicile,
-  },
-];
-
-export function usePortfolio() {
+export function usePortfolioStorage(
+  etfs: EtfConfig[],
+  setEtfs: React.Dispatch<React.SetStateAction<EtfConfig[]>>
+) {
   const { t } = useTranslation();
-  const [etfs, setEtfs] = useState<EtfConfig[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isLoadingDefaults, setIsLoadingDefaults] = useState(false);
 
@@ -152,7 +85,7 @@ export function usePortfolio() {
       setIsLoaded(true);
       setIsLoadingDefaults(false);
     }
-  }, [t]);
+  }, [t, setEtfs]);
 
   // Load from indexedDB or fallback to local storage or defaults on mount
   useEffect(() => {
@@ -207,7 +140,7 @@ export function usePortfolio() {
     };
 
     loadInitialData();
-  }, [loadDefaults, t]);
+  }, [loadDefaults, t, setEtfs]);
 
   // Save to indexedDB whenever etfs change
   useEffect(() => {
@@ -216,32 +149,9 @@ export function usePortfolio() {
     }
   }, [etfs, isLoaded, isLoadingDefaults]);
 
-  const addEtf = useCallback((etf: EtfConfig) => {
-    setEtfs((prev) => [...prev, etf]);
-  }, []);
-
-  const removeEtf = useCallback((id: string) => {
-    setEtfs((prev) => prev.filter((etf) => etf.id !== id));
-  }, []);
-
-  const updateEtfWeight = useCallback((id: string, weight: number) => {
-    setEtfs((prev) => {
-      const etf = prev.find((e) => e.id === id);
-      if (!etf || etf.globalWeight === weight) return prev;
-      return prev.map((e) => (e.id === id ? { ...e, globalWeight: weight } : e));
-    });
-  }, []);
-
-  const totalWeight = etfs.reduce((sum, etf) => sum + etf.globalWeight, 0);
-
   return {
-    etfs,
     isLoaded,
     isLoadingDefaults,
-    totalWeight,
-    addEtf,
-    removeEtf,
-    updateEtfWeight,
     loadDefaults,
   };
 }
