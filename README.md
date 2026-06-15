@@ -120,21 +120,12 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 1. **Historical Backtesting Chart:** Integration with historical price APIs to chart a simulated backtested growth curve for your exact portfolio configuration over the last 1-5 years.
 2. **Correlation Matrix Heatmap:** A visual heatmap matrix that calculates how closely correlated the ETFs are to one another, helping flag redundancies and ensure true diversification.
-3. **Deep Dive & Geographic Search:** A dedicated feature that allows users to isolate and analyze the full statistics of a single ETF at a time
-4. **3D Overlap Terrain (Topographic Map)**: Instead of a network, visualize ETF overlap as a 3D topographical map. The X and Y axes represent the different ETFs, and the Z-axis (the  
+3. **3D Overlap Terrain (Topographic Map)**: Instead of a network, visualize ETF overlap as a 3D topographical map. The X and Y axes represent the different ETFs, and the Z-axis (the  
    "mountains") represents the percentage of shared holdings. Highly overlapping portfolios would look like massive mountain ranges, while  
    diversified portfolios would look like flat plains.
-5. **3DSankey "Money Flow" Diagram**: A stunning, flowing Sankey diagram that tracks how a single dollar is split. It starts as one large stream on the left ("Total Portfolio"), splits
+4. **3DSankey "Money Flow" Diagram**: A stunning, flowing Sankey diagram that tracks how a single dollar is split. It starts as one large stream on the left ("Total Portfolio"), splits
    into your ETFs, then flows into Sectors, and finally breaks off into individual top companies. It is the absolute best way to visualize exposure  
    distribution.
-6. **Radar Chart**
-7. **Voronoi Treemap**: Instead of boring rectangular treemaps, Voronoi treemaps use organic, cell-like shapes. It looks like viewing plant cells under a microscope,  
+5. **Radar Chart**
+6. **Voronoi Treemap**: Instead of boring rectangular treemaps, Voronoi treemaps use organic, cell-like shapes. It looks like viewing plant cells under a microscope,  
    where the largest "cells" are your biggest holdings. It looks incredibly premium, especially with our cyberpunk/dark mode styling
-8. **Geographic "X-Ray" Search**: A dedicated section on the dashboard where users can query their exact geographic exposure.
-   - Search by Country/Region: A user types "Japan". The tool instantly scans all 5,000+ underlying holdings across all their ETFs.
-   - Contribution Breakdown: It tells the user: "You have 6.5% total exposure to Japan. This comes from: 4% via iShares Core MSCI World, 2% via  
-     Vanguard Emerging Markets, and 0.5% via Amundi Asia."
-   - Company Drill-Down: Underneath the country stats, it lists the actual Japanese companies they own indirectly (e.g., Toyota, Sony) and their  
-     exact weights in the total portfolio.
-   - Interactive Global Map: We could add an interactive SVG world map. Hovering over or clicking a country (like Brazil or India) acts as a quick-  
-     filter, immediately sliding out a panel with the exact ETFs supplying that exposure.
