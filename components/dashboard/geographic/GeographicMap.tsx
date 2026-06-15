@@ -11,9 +11,10 @@ const MAX_SCALE = 2.8;
 interface GeographicMapProps {
   mapData: { country: string; value: number }[];
   onCountryClick: (countryName: string) => void;
+  selectedCountry?: string;
 }
 
-export function GeographicMap({ mapData, onCountryClick }: GeographicMapProps) {
+export function GeographicMap({ mapData, onCountryClick, selectedCountry }: GeographicMapProps) {
   const { resolvedTheme } = useTheme();
   const { t } = useTranslation();
 
@@ -80,6 +81,32 @@ export function GeographicMap({ mapData, onCountryClick }: GeographicMapProps) {
                     data={mapData as any}
                     onClickFunction={({ countryName }) => {
                       onCountryClick(countryName);
+                    }}
+                    styleFunction={(context) => {
+                      const isSelected =
+                        selectedCountry &&
+                        context.countryName.toLowerCase() === selectedCountry.toLowerCase();
+
+                      const cv = context.countryValue as number | undefined;
+                      const isUnmapped = cv === undefined;
+                      let opacityLevel = 0;
+
+                      if (!isUnmapped) {
+                        const range = context.maxValue - context.minValue;
+                        opacityLevel =
+                          range > 0 ? 0.2 + 0.6 * ((cv - context.minValue) / range) : 0.8;
+                      }
+
+                      if (Number.isNaN(opacityLevel)) opacityLevel = 0.8;
+
+                      return {
+                        fill: isSelected ? '#f59e0b' : '#3b82f6',
+                        fillOpacity: isSelected ? 1 : opacityLevel,
+                        stroke: resolvedTheme === 'theme-cyberpunk' ? '#d9e4ff' : '#0f172a',
+                        strokeWidth: 1,
+                        strokeOpacity: 0.9,
+                        cursor: 'pointer',
+                      };
                     }}
                   />
                 </div>
