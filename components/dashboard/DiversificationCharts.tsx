@@ -12,12 +12,15 @@ import {
   Bar,
   Cell,
 } from 'recharts';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 interface DiversificationChartsProps {
   etfs: EtfConfig[];
 }
 
 export function DiversificationCharts({ etfs }: DiversificationChartsProps) {
+  const { t } = useTranslation();
+
   // Ensure active ETFs only
   const activeEtfs = useMemo(() => etfs.filter((e) => e.globalWeight > 0), [etfs]);
 
@@ -30,10 +33,8 @@ export function DiversificationCharts({ etfs }: DiversificationChartsProps) {
       <div className="lg:col-span-2">
         <Card>
           <CardHeader>
-            <CardTitle>Diversification Analysis</CardTitle>
-            <CardDescription>
-              Add at least two ETFs with non-zero weight to see overlap and uniqueness analysis.
-            </CardDescription>
+            <CardTitle>{t.diversification.analysisTitle}</CardTitle>
+            <CardDescription>{t.diversification.needTwoEtfs}</CardDescription>
           </CardHeader>
         </Card>
       </div>
@@ -68,12 +69,8 @@ export function DiversificationCharts({ etfs }: DiversificationChartsProps) {
       {/* Uniqueness Score Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Diversification Value (Uniqueness Score)</CardTitle>
-          <CardDescription>
-            What percentage of this ETF&apos;s holdings exists nowhere else in your portfolio? High
-            uniqueness means true diversification. Low uniqueness means you might be paying fees for
-            redundant assets.
-          </CardDescription>
+          <CardTitle>{t.diversification.uniquenessTitle}</CardTitle>
+          <CardDescription>{t.diversification.uniquenessDesc}</CardDescription>
         </CardHeader>
         <CardContent>
           <div style={{ width: '100%', height: 256, minWidth: 0 }}>
@@ -115,7 +112,8 @@ export function DiversificationCharts({ etfs }: DiversificationChartsProps) {
                             className="font-semibold"
                             style={{ color: getUniquenessColor(payload[0].value as number) }}
                           >
-                            {(payload[0].value as number).toFixed(1)}% Unique
+                            {(payload[0].value as number).toFixed(1)}{' '}
+                            {t.diversification.uniqueSuffix}
                           </p>
                         </Card>
                       );
@@ -140,18 +138,15 @@ export function DiversificationCharts({ etfs }: DiversificationChartsProps) {
       {/* Correlation Matrix Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Holding Overlap Matrix</CardTitle>
-          <CardDescription>
-            The percentage of identical stocks shared between each pair of ETFs. Darker red
-            indicates higher redundancy.
-          </CardDescription>
+          <CardTitle>{t.diversification.matrixTitle}</CardTitle>
+          <CardDescription>{t.diversification.matrixDesc}</CardDescription>
         </CardHeader>
         <CardContent className="overflow-x-auto">
           <table className="w-full text-sm text-center border-collapse">
             <thead>
               <tr>
                 <th className="p-3 text-left font-medium text-muted-foreground border-b border-r border-border">
-                  ETF
+                  {t.diversification.etfColumn}
                 </th>
                 {activeEtfs.map((e) => (
                   <th
