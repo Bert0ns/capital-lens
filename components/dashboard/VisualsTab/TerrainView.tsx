@@ -49,7 +49,6 @@ function Terrain({ etfs }: { etfs: EtfConfig[] }) {
 
   return (
     <group rotation={[-Math.PI / 2.5, 0, 0]}>
-      {/* @ts-expect-error - animated.mesh typing issue with three.js */}
       <animated.mesh ref={meshRef} geometry={geometry} scale-z={springs.scaleZ}>
         <meshStandardMaterial
           vertexColors
