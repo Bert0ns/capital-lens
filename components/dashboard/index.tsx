@@ -34,6 +34,7 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
 
   const {
     geoData,
+    fullGeoData,
     sectorData,
     currencyData,
     etfAllocationData,
@@ -112,7 +113,7 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
         >
           <VisualsTab
             etfs={etfs}
-            geoData={geoData}
+            geoData={fullGeoData}
             isFullscreen={isFullscreen}
             onToggleFullscreen={() => setIsFullscreen(!isFullscreen)}
             isActive={activeTab === '3D Visuals'}
