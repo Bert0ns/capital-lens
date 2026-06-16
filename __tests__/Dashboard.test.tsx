@@ -8,7 +8,7 @@ jest.mock('@/lib/i18n/LanguageContext', () => ({
     language: 'en',
     setLanguage: jest.fn(),
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    t: require('@/lib/i18n/dictionaries').dictionaries.en,
+    t: require('@/lib/i18n').dictionaries.en,
   }),
 }));
 

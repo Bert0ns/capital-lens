@@ -2,6 +2,7 @@ import { renderHook } from '@testing-library/react';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { EtfConfig } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { dictionaries } from '@/lib/i18n';
 
 jest.mock('../lib/i18n/LanguageContext', () => ({
   useTranslation: jest.fn(),
@@ -10,30 +11,7 @@ jest.mock('../lib/i18n/LanguageContext', () => ({
 describe('useDashboardData', () => {
   beforeEach(() => {
     (useTranslation as jest.Mock).mockReturnValue({
-      t: {
-        dashboard: {
-          unknown: 'Unknown',
-          top: 'Top',
-        },
-        sectors: {
-          'Information Technology': 'Information Technology',
-          Unknown: 'Unknown',
-        },
-        countries: {
-          'United States': 'United States',
-          Unknown: 'Unknown',
-        },
-        etfProperties: {
-          Physical: 'Physical',
-          Synthetic: 'Synthetic',
-          Optimized: 'Optimized',
-          Accumulating: 'Accumulating',
-          Distributing: 'Distributing',
-          Ireland: 'Ireland',
-          Luxembourg: 'Luxembourg',
-          US: 'US',
-        },
-      },
+      t: dictionaries.en,
     });
   });
 
