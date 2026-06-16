@@ -89,6 +89,7 @@ export default function Dashboard({ etfs, totalWeight }: DashboardProps) {
             fundAgeData={fundAgeData}
             replicationData={replicationData}
             profitData={profitData}
+            etfs={etfs}
           />
         )}
 
