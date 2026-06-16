@@ -29,3 +29,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 Use the pnpm package manager
 
 Use the scripts in package.json if applicable
+
+prefer ui components from the shadcn ui library

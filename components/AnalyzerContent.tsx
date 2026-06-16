@@ -48,7 +48,11 @@ export default function AnalyzerContent() {
             <div className={'flex flex-col'}>
               <button
                 onClick={() => setIsSlidersOpen(!isSlidersOpen)}
-                className="shrink-0 flex items-center justify-between w-full mb-0 py-3 px-4 text-sm font-semibold text-foreground bg-muted/30 border border-border rounded-xl hover:bg-muted/60 transition-colors cursor-pointer"
+                className={`shrink-0 flex items-center justify-between w-full mb-0 py-3 px-4 text-sm font-semibold rounded-xl transition-colors cursor-pointer shadow-sm ${
+                  isSlidersOpen
+                    ? 'text-foreground bg-muted/30 border border-border hover:bg-muted/60'
+                    : 'text-primary-foreground bg-primary border-transparent hover:bg-primary/90 ring-2 ring-primary/20'
+                }`}
               >
                 <span>
                   {isSlidersOpen ? t.analyzer.hidePortfolioSetup : t.analyzer.managePortfolio}
