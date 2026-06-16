@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import EtfForm from '@/components/EtfForm';
 import { useEtfForm } from '@/hooks/useEtfForm';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { dictionaries } from '@/lib/i18n';
 
 jest.mock('../hooks/useEtfForm');
 jest.mock('../lib/i18n/LanguageContext', () => ({
@@ -10,46 +11,8 @@ jest.mock('../lib/i18n/LanguageContext', () => ({
 
 describe('EtfForm Component', () => {
   beforeEach(() => {
-    const mockT = {
-      etfForm: {
-        addNewEtf: 'Add New ETF',
-        title: 'Add ETF',
-        description: 'Desc',
-        name: 'Name',
-        isin: 'ISIN',
-        ter: 'TER',
-        issuer: 'Issuer',
-        uploadCsv: 'Upload CSV',
-        cancel: 'Cancel',
-        addEtf: 'Add ETF',
-        replicationMethod: 'Replication Method',
-        fundSize: 'Fund Size',
-        fundAge: 'Fund Age',
-        useOfProfit: 'Use of Profit',
-        domicile: 'Domicile',
-      },
-      etfProperties: {
-        Physical: 'Physical',
-        Synthetic: 'Synthetic',
-        Optimized: 'Optimized',
-        Accumulating: 'Accumulating',
-        Distributing: 'Distributing',
-        Ireland: 'Ireland',
-        Luxembourg: 'Luxembourg',
-        US: 'US',
-      },
-      sectors: {
-        Other: 'Other',
-      },
-      countries: {
-        'United States': 'United States',
-        Unknown: 'Unknown',
-        Other: 'Other',
-      },
-    };
-
     (useTranslation as jest.Mock).mockReturnValue({
-      t: mockT,
+      t: dictionaries.en,
     });
 
     (useEtfForm as jest.Mock).mockReturnValue({
@@ -81,14 +44,16 @@ describe('EtfForm Component', () => {
         setFile: jest.fn(),
         handleSubmit: jest.fn(),
       },
-      t: mockT,
+      t: dictionaries.en,
     });
   });
 
   it('renders form fields when open', () => {
     render(<EtfForm onAddEtf={jest.fn()} />);
     // Just rendering it when `open=true` covers the UI component lines.
-    expect(screen.getAllByText('Add ETF').length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(dictionaries.en.pages.analyzer.components.etfForm.addEtf).length
+    ).toBeGreaterThan(0);
     expect(screen.getByPlaceholderText('e.g., S&P 500')).toBeInTheDocument();
   });
 });

@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import Navbar from '@/components/Navbar';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { dictionaries } from '@/lib/i18n';
 
 // Mock dependencies
 jest.mock('next/link', () => ({
@@ -30,16 +31,7 @@ jest.mock('../lib/i18n/LanguageContext', () => ({
 describe('Navbar Component', () => {
   beforeEach(() => {
     (useTranslation as jest.Mock).mockReturnValue({
-      t: {
-        navbar: {
-          dashboard: 'Dashboard',
-          about: 'About',
-          github: 'GitHub',
-          menu: 'Menu',
-          language: 'Language',
-          theme: 'Theme',
-        },
-      },
+      t: dictionaries.en,
     });
   });
 

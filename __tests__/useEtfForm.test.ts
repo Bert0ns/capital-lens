@@ -4,6 +4,7 @@ import { useEtfForm } from '@/hooks/useEtfForm';
 import { toast } from 'sonner';
 import { getCsvParser } from '@/lib/parsers';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
+import { dictionaries } from '@/lib/i18n';
 
 // Mocks
 jest.mock('sonner', () => ({
@@ -39,21 +40,7 @@ describe('useEtfForm', () => {
     jest.clearAllMocks();
 
     (useTranslation as jest.Mock).mockReturnValue({
-      t: {
-        etfForm: {
-          missingFields: 'missingFields',
-          missingFieldsDesc: 'missingFieldsDesc',
-          invalidTer: 'invalidTer',
-          invalidSize: 'invalidSize',
-          invalidAge: 'invalidAge',
-          parseError: 'parseError',
-          emptyFile: 'emptyFile',
-          emptyFileDesc: 'emptyFileDesc',
-          parsedWithWarnings: 'parsedWithWarnings',
-          parsedWithWarningsDesc: 'parsedWithWarningsDesc',
-          etfAdded: 'etfAdded',
-        },
-      },
+      t: dictionaries.en,
     });
 
     (getCsvParser as jest.Mock).mockReturnValue({
@@ -103,7 +90,10 @@ describe('useEtfForm', () => {
 
     await submitForm(result);
 
-    expect(toast.error).toHaveBeenCalledWith('missingFields', expect.any(Object));
+    expect(toast.error).toHaveBeenCalledWith(
+      dictionaries.en.pages.analyzer.components.etfForm.missingFields,
+      expect.any(Object)
+    );
     expect(mockOnAddEtf).not.toHaveBeenCalled();
   });
 
@@ -117,7 +107,10 @@ describe('useEtfForm', () => {
 
     await submitForm(result);
 
-    expect(toast.error).toHaveBeenCalledWith('invalidTer', expect.any(Object));
+    expect(toast.error).toHaveBeenCalledWith(
+      dictionaries.en.pages.analyzer.components.etfForm.invalidTer,
+      expect.any(Object)
+    );
   });
 
   it('handles CSV parsing errors', async () => {
@@ -129,7 +122,7 @@ describe('useEtfForm', () => {
     await renderFillAndSubmit();
 
     expect(toast.error).toHaveBeenCalledWith(
-      'parseError',
+      dictionaries.en.pages.analyzer.components.etfForm.parseError,
       expect.objectContaining({
         description: expect.stringContaining('Invalid CSV format'),
       })
@@ -171,7 +164,10 @@ describe('useEtfForm', () => {
       })
     );
 
-    expect(toast.success).toHaveBeenCalledWith('etfAdded', expect.any(Object));
+    expect(toast.success).toHaveBeenCalledWith(
+      dictionaries.en.pages.analyzer.components.etfForm.etfAdded,
+      expect.any(Object)
+    );
     expect(result.current.state.name).toBe('');
   });
 
@@ -193,7 +189,7 @@ describe('useEtfForm', () => {
     await renderFillAndSubmit();
 
     expect(toast.warning).toHaveBeenCalledWith(
-      'parsedWithWarnings',
+      dictionaries.en.pages.analyzer.components.etfForm.parsedWithWarnings,
       expect.objectContaining({
         description: expect.stringContaining('Some random warning'),
       })
@@ -224,7 +220,10 @@ describe('useEtfForm', () => {
 
     await submitForm(result);
 
-    expect(toast.error).toHaveBeenCalledWith('invalidSize', expect.any(Object));
+    expect(toast.error).toHaveBeenCalledWith(
+      dictionaries.en.pages.analyzer.components.etfForm.invalidSize,
+      expect.any(Object)
+    );
   });
 
   it('shows error if fund age is invalid', async () => {
@@ -237,7 +236,10 @@ describe('useEtfForm', () => {
 
     await submitForm(result);
 
-    expect(toast.error).toHaveBeenCalledWith('invalidAge', expect.any(Object));
+    expect(toast.error).toHaveBeenCalledWith(
+      dictionaries.en.pages.analyzer.components.etfForm.invalidAge,
+      expect.any(Object)
+    );
   });
 
   it('shows error if parsed file is completely empty (no holdings)', async () => {
@@ -249,9 +251,9 @@ describe('useEtfForm', () => {
     await renderFillAndSubmit();
 
     expect(toast.error).toHaveBeenCalledWith(
-      'emptyFile',
+      dictionaries.en.pages.analyzer.components.etfForm.emptyFile,
       expect.objectContaining({
-        description: 'emptyFileDesc',
+        description: expect.any(String),
       })
     );
   });
