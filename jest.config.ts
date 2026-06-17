@@ -29,10 +29,12 @@ const config: Config = {
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-export default async () => {
+const getConfig = async () => {
   const nextJestConfig = await createJestConfig(config)();
   return {
     ...nextJestConfig,
     transformIgnorePatterns: ['/node_modules/(?!(d3-hierarchy|d3-voronoi-treemap)/)'],
   };
 };
+
+export default getConfig;

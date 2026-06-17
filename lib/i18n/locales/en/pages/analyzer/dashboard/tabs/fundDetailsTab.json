@@ -16,5 +16,6 @@
   "voronoiTailName": "Other Holdings",
   "voronoiTailTicker": "Various",
   "voronoiTailSector": "Mixed",
-  "voronoiNodesSliderLabel": "Max Nodes Displayed"
+  "voronoiNodesSliderLabel": "Max Nodes Displayed",
+  "voronoiCalculating": "Calculating Physics..."
 }

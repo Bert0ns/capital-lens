@@ -16,5 +16,6 @@
   "voronoiTailName": "Altre Partecipazioni",
   "voronoiTailTicker": "Varie",
   "voronoiTailSector": "Misto",
-  "voronoiNodesSliderLabel": "Nodi Massimi Visualizzati"
+  "voronoiNodesSliderLabel": "Nodi Massimi Visualizzati",
+  "voronoiCalculating": "Calcolo Fisica in corso..."
 }

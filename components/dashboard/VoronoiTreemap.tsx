@@ -4,7 +4,9 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { EtfConfig } from '@/lib/types';
 import { VoronoiPolygon } from '@/lib/math/voronoi';
+import { getVoronoiCacheKey, getCachedVoronoi, setCachedVoronoi } from '@/lib/math/voronoiCache';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
@@ -32,7 +34,7 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
     return keys.size;
   }, [etfs]);
 
-  const [maxNodes, setMaxNodes] = useState(150);
+  const [maxNodes, setMaxNodes] = useLocalStorage('voronoi_max_nodes', 150);
   const debouncedMaxNodes = useDebounce(maxNodes, 300);
   const [polygons, setPolygons] = useState<VoronoiPolygon[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -43,10 +45,12 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
 
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        setDimensions({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+          setDimensions({
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+          });
+        }
       }
     });
 
@@ -57,6 +61,7 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
     workerRef.current.onmessage = (e) => {
       if (e.data.type === 'SUCCESS') {
         setPolygons(e.data.polygons);
+        setCachedVoronoi(e.data.cacheKey, e.data.polygons);
         setIsCalculating(false);
       } else if (e.data.type === 'ERROR') {
         console.error('Voronoi Worker Error:', e.data.error);
@@ -72,13 +77,30 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
 
   useEffect(() => {
     if (dimensions.width === 0 || dimensions.height === 0 || etfs.length === 0) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+
+    const cacheKey = getVoronoiCacheKey(
+      etfs,
+      dimensions.width,
+      dimensions.height,
+      debouncedMaxNodes
+    );
+    const cachedData = getCachedVoronoi(cacheKey);
+
+    if (cachedData) {
+      /* eslint-disable react-hooks/set-state-in-effect */
+      setPolygons(cachedData);
+      setIsCalculating(false);
+      /* eslint-enable react-hooks/set-state-in-effect */
+      return;
+    }
+
     setIsCalculating(true);
     workerRef.current?.postMessage({
       etfs,
       width: dimensions.width,
       height: dimensions.height,
       maxNodes: debouncedMaxNodes,
+      cacheKey,
     });
   }, [etfs, dimensions, debouncedMaxNodes]);
 
@@ -126,7 +148,7 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
     <Card className="w-full relative overflow-hidden bg-background/50 backdrop-blur-sm border-primary/20">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
-          <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-400">
+          <CardTitle className="text-xl font-bold bg-clip-text text-transparent bg-linear-to-r from-primary to-purple-400">
             {t.pages.analyzer.dashboard.tabs.fundDetailsTab.voronoiTitle}
           </CardTitle>
           <CardDescription>
@@ -141,8 +163,8 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
           <Slider
             defaultValue={[Math.min(150, Math.max(10, totalHoldings))]}
             max={Math.max(10, totalHoldings)}
-            min={10}
-            step={10}
+            min={2}
+            step={50}
             value={[maxNodes]}
             onValueChange={(val) => setMaxNodes(Array.isArray(val) ? val[0] : val)}
             className="w-full"
@@ -150,7 +172,7 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div ref={containerRef} className="w-full h-[500px] relative">
+        <div ref={containerRef} className="w-full h-125 relative">
           <AnimatePresence>
             {isCalculating && (
               <motion.div
@@ -161,7 +183,7 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
               >
                 <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
                 <span className="text-sm font-mono text-primary animate-pulse">
-                  Calculating Physics...
+                  {t.pages.analyzer.dashboard.tabs.fundDetailsTab.voronoiCalculating}
                 </span>
               </motion.div>
             )}
@@ -210,7 +232,7 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
           {/* Hover Tooltip Overlay */}
           {hoveredCell && (
             <div
-              className="absolute top-4 right-4 pointer-events-none bg-background/90 border border-primary/40 p-4 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md max-w-[250px]"
+              className="absolute top-4 right-4 pointer-events-none bg-background/90 border border-primary/40 p-4 rounded-xl shadow-[0_0_15px_rgba(0,0,0,0.5)] backdrop-blur-md max-w-62.5"
               style={{
                 boxShadow: `0 0 10px ${getBorderColor(hoveredCell.data.sector, hoveredCell.data.isTail)}33`,
               }}
