@@ -105,6 +105,14 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
     });
   }, [etfs, dimensions, debouncedMaxNodes]);
 
+  const getSectorColorIndex = (sector: string, length: number) => {
+    let hash = 0;
+    for (let i = 0; i < sector.length; i++) {
+      hash = sector.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return Math.abs(hash) % length;
+  };
+
   // Cyberpunk/Neon Color palette based on sectors
   const getColor = (sector: string, isTail?: boolean) => {
     if (isTail) return 'rgba(128, 128, 128, 0.1)';
@@ -119,12 +127,7 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
       'rgba(250, 204, 21, 0.2)', // Yellow
     ];
 
-    // Simple hash to consistently pick a color
-    let hash = 0;
-    for (let i = 0; i < sector.length; i++) {
-      hash = sector.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
+    return colors[getSectorColorIndex(sector, colors.length)];
   };
 
   const getBorderColor = (sector: string, isTail?: boolean) => {
@@ -138,11 +141,7 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
       'rgb(244, 114, 182)',
       'rgb(250, 204, 21)',
     ];
-    let hash = 0;
-    for (let i = 0; i < sector.length; i++) {
-      hash = sector.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
+    return colors[getSectorColorIndex(sector, colors.length)];
   };
 
   return (
