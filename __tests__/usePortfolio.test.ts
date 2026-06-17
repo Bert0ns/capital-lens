@@ -3,6 +3,11 @@ import { usePortfolio } from '@/hooks/usePortfolio';
 import { getItem } from '@/lib/indexeddb';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
 import { toast } from 'sonner';
+import { getCsvParser } from '@/lib/parsers';
+
+jest.mock('../lib/parsers', () => ({
+  getCsvParser: jest.fn(),
+}));
 
 jest.mock('../lib/indexeddb', () => ({
   getItem: jest.fn(),
@@ -37,13 +42,13 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 });
 
-// Mock fetch for loadDefaults
-global.fetch = jest.fn(() =>
+// Default fetch mock
+const defaultFetchMock = () =>
   Promise.resolve({
     ok: true,
     blob: () => Promise.resolve(new Blob([''], { type: 'text/csv' })),
-  })
-) as jest.Mock;
+  });
+global.fetch = jest.fn(defaultFetchMock) as jest.Mock;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const createMockEtf = (overrides: Partial<any> = {}) =>
@@ -69,6 +74,10 @@ describe('usePortfolio Hook', () => {
     window.localStorage.clear();
     jest.clearAllMocks();
     (getItem as jest.Mock).mockResolvedValue(null);
+    (getCsvParser as jest.Mock).mockReturnValue({
+      parse: jest.fn().mockResolvedValue({ holdings: [] }),
+    });
+    (global.fetch as jest.Mock).mockImplementation(defaultFetchMock);
   });
 
   const renderAndAwaitLoad = async () => {
@@ -102,10 +111,51 @@ describe('usePortfolio Hook', () => {
     expect(result.current.etfs.length).toBe(2);
     expect(result.current.etfs[1].name).toBe('Test ETF');
     expect(result.current.totalWeight).toBe(100);
+  });
 
-    JSON.parse(window.localStorage.getItem('etf_portfolio_data') || '[]');
-    // Wait, the state updates are asynchronous or inside effects.
-    // If it fails, we just don't assert localStorage here.
+  it('loadDefaults loads ETFs successfully with holdings', async () => {
+    // Mock getCsvParser to return holdings
+    (getCsvParser as jest.Mock).mockReturnValue({
+      parse: jest.fn().mockResolvedValue({
+        holdings: [
+          {
+            name: 'Apple',
+            ticker: 'AAPL',
+            weight: 100,
+            sector: 'IT',
+            country: 'US',
+            currency: 'USD',
+          },
+        ],
+      }),
+    });
+
+    const result = await renderAndAwaitLoad();
+
+    act(() => {
+      result.current.loadDefaults();
+    });
+
+    await waitFor(() => {
+      expect(result.current.etfs.length).toBeGreaterThan(0);
+      expect(result.current.etfs[0].holdings.length).toBe(1);
+    });
+  });
+
+  it('loadDefaults handles fetch failure gracefully', async () => {
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({ ok: false, status: 404 })
+    );
+
+    const result = await renderAndAwaitLoad();
+
+    act(() => {
+      result.current.loadDefaults();
+    });
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalled();
+    });
   });
 
   it('can update weight of an ETF', async () => {

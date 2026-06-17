@@ -77,4 +77,41 @@ describe('useDashboardData', () => {
       { name: '< 0.1%', value: 0.05 },
     ]);
   });
+
+  it('groups tail countries and sectors into "Other" when exceeding limits', () => {
+    const etfs: EtfConfig[] = [
+      {
+        id: 'limit-test',
+        name: 'Limit Test',
+        issuer: 'Vanguard',
+        isin: 'IE00LIMIT',
+        ter: 0.1,
+        globalWeight: 100,
+        replicationMethod: 'Physical',
+        useOfProfit: 'Accumulating',
+        domicile: 'Ireland',
+        fundAge: 5,
+        fundSize: 1000,
+        holdings: Array.from({ length: 20 }).map((_, i) => ({
+          name: `Company ${i}`,
+          ticker: `TICK${i}`,
+          weight: 100 / 20,
+          sector: `Sector ${i}`,
+          country: `Country ${i}`,
+          currency: 'USD',
+        })),
+      },
+    ];
+
+    const { result } = renderHook(() => useDashboardData(etfs, 100));
+
+    // sector limit is 11, so 11 items + 1 "Other" = 12 items
+    expect(result.current.sectorData.length).toBe(12);
+    expect(result.current.sectorData[11].name).toBe(dictionaries.en.data.sectors.Other);
+    expect(result.current.sectorData[11].value).toBeCloseTo((100 / 20) * (20 - 11));
+
+    // country limit is 15, so 15 items + 1 "Other" = 16 items
+    expect(result.current.geoData.length).toBe(16);
+    expect(result.current.geoData[15].name).toBe(dictionaries.en.data.sectors.Other); // the word 'Other' is fetched from data.sectors
+  });
 });

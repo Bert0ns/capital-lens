@@ -6,6 +6,7 @@ import {
   searchByCountry,
   generateNetworkData,
 } from '../lib/math';
+import { calculateMechanicsData } from '../lib/math/mechanics';
 import { EtfConfig } from '@/lib/types';
 
 describe('Math Utilities', () => {
@@ -488,6 +489,14 @@ describe('Math Utilities', () => {
       const data = generateNetworkData(zeroWeightEtfs, 10);
       expect(data.nodes.length).toBe(0);
       expect(data.links.length).toBe(0);
+    });
+  });
+
+  describe('calculateMechanicsData', () => {
+    it('returns empty arrays for empty etfs input', () => {
+      const result = calculateMechanicsData([]);
+      expect(result.topEtfs).toEqual([]);
+      expect(result.axesData).toEqual([]);
     });
   });
 });
