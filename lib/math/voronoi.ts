@@ -20,12 +20,7 @@ export function generateVoronoiData(
   etfs: EtfConfig[],
   width: number,
   height: number,
-  maxNodes: number = 150,
-  tailOptions: { name: string; ticker: string; sector: string } = {
-    name: 'Other Holdings',
-    ticker: 'Various',
-    sector: 'Mixed',
-  }
+  maxNodes: number = 150
 ): VoronoiPolygon[] {
   if (etfs.length === 0) return [];
 
@@ -67,10 +62,10 @@ export function generateVoronoiData(
 
     topHoldings.push({
       id: 'TAIL_NODE',
-      name: tailOptions.name,
-      ticker: tailOptions.ticker,
+      name: 'TAIL_NAME',
+      ticker: 'TAIL_TICKER',
       weight: tailWeight,
-      sector: tailOptions.sector,
+      sector: 'TAIL_SECTOR',
       isTail: true,
     });
 
@@ -86,12 +81,14 @@ export function generateVoronoiData(
   const rootNode = hierarchy<unknown>(rootData).sum((d) => (d as { weight?: number }).weight || 0);
 
   // 5. Compute Voronoi treemap
-  const vTreemap = voronoiTreemap().clip([
-    [0, 0],
-    [width, 0],
-    [width, height],
-    [0, height],
-  ]);
+  const vTreemap = voronoiTreemap()
+    .maxIterationCount(50)
+    .clip([
+      [0, 0],
+      [width, 0],
+      [width, height],
+      [0, height],
+    ]);
 
   vTreemap(rootNode);
 
@@ -104,7 +101,7 @@ export function generateVoronoiData(
     if (vLeaf.polygon) {
       polygons.push({
         data: leaf.data as VoronoiNodeData,
-        polygon: vLeaf.polygon,
+        polygon: vLeaf.polygon.map((p: number[]) => [p[0], p[1]] as [number, number]),
       });
     }
   }

@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { EtfConfig } from '@/lib/types';
-import { generateVoronoiData, VoronoiPolygon } from '@/lib/math/voronoi';
+import { VoronoiPolygon } from '@/lib/math/voronoi';
+import { useDebounce } from '@/hooks/useDebounce';
+import { Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
@@ -31,6 +33,10 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
   }, [etfs]);
 
   const [maxNodes, setMaxNodes] = useState(150);
+  const debouncedMaxNodes = useDebounce(maxNodes, 300);
+  const [polygons, setPolygons] = useState<VoronoiPolygon[]>([]);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const workerRef = useRef<Worker>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -45,22 +51,36 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
     });
 
     observer.observe(containerRef.current);
-    return () => observer.disconnect();
+
+    // Initialize Web Worker
+    workerRef.current = new Worker(new URL('../../lib/math/voronoi.worker.ts', import.meta.url));
+    workerRef.current.onmessage = (e) => {
+      if (e.data.type === 'SUCCESS') {
+        setPolygons(e.data.polygons);
+        setIsCalculating(false);
+      } else if (e.data.type === 'ERROR') {
+        console.error('Voronoi Worker Error:', e.data.error);
+        setIsCalculating(false);
+      }
+    };
+
+    return () => {
+      observer.disconnect();
+      workerRef.current?.terminate();
+    };
   }, []);
 
-  const polygons = useMemo(() => {
-    if (dimensions.width === 0 || dimensions.height === 0 || etfs.length === 0) return [];
-    try {
-      return generateVoronoiData(etfs, dimensions.width, dimensions.height, maxNodes, {
-        name: t.pages.analyzer.dashboard.tabs.fundDetailsTab.voronoiTailName,
-        ticker: t.pages.analyzer.dashboard.tabs.fundDetailsTab.voronoiTailTicker,
-        sector: t.pages.analyzer.dashboard.tabs.fundDetailsTab.voronoiTailSector,
-      });
-    } catch (err) {
-      console.error('Error generating Voronoi treemap', err);
-      return [];
-    }
-  }, [etfs, dimensions, maxNodes, t.pages.analyzer.dashboard.tabs.fundDetailsTab]);
+  useEffect(() => {
+    if (dimensions.width === 0 || dimensions.height === 0 || etfs.length === 0) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsCalculating(true);
+    workerRef.current?.postMessage({
+      etfs,
+      width: dimensions.width,
+      height: dimensions.height,
+      maxNodes: debouncedMaxNodes,
+    });
+  }, [etfs, dimensions, debouncedMaxNodes]);
 
   // Cyberpunk/Neon Color palette based on sectors
   const getColor = (sector: string, isTail?: boolean) => {
@@ -131,49 +151,60 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
       </CardHeader>
       <CardContent>
         <div ref={containerRef} className="w-full h-[500px] relative">
+          <AnimatePresence>
+            {isCalculating && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-background/40 backdrop-blur-sm rounded-md"
+              >
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                <span className="text-sm font-mono text-primary animate-pulse">
+                  Calculating Physics...
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {dimensions.width > 0 && dimensions.height > 0 && polygons.length > 0 && (
-            <svg
+            <motion.svg
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
               width={dimensions.width}
               height={dimensions.height}
               className="absolute inset-0"
-              style={{ filter: 'drop-shadow(0 0 8px rgba(0,0,0,0.5))' }}
             >
               <defs>
-                {/* Glow filter for hover state */}
+                {/* Glow filter for hover state only */}
                 <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="3" result="blur" />
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
               </defs>
 
-              {polygons.map((cell, i) => {
+              {polygons.map((cell) => {
                 const pathData = `M${cell.polygon.map((p) => p.join(',')).join('L')}Z`;
                 const isHovered = hoveredCell?.data.id === cell.data.id;
                 const strokeColor = getBorderColor(cell.data.sector, cell.data.isTail);
                 const fillColor = getColor(cell.data.sector, cell.data.isTail);
 
                 return (
-                  <motion.path
+                  <path
                     key={cell.data.id}
                     d={pathData}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{
-                      duration: 0.8,
-                      delay: i * 0.005, // staggered entry
-                      ease: 'easeOut',
-                    }}
                     fill={isHovered ? strokeColor : fillColor}
                     stroke={strokeColor}
                     strokeWidth={isHovered ? 2 : 1}
-                    className="cursor-pointer transition-colors duration-300"
+                    className="cursor-pointer transition-colors duration-200"
                     onMouseEnter={() => setHoveredCell(cell)}
                     onMouseLeave={() => setHoveredCell(null)}
                     style={isHovered ? { filter: 'url(#neon-glow)' } : {}}
                   />
                 );
               })}
-            </svg>
+            </motion.svg>
           )}
 
           {/* Hover Tooltip Overlay */}
@@ -185,12 +216,20 @@ export function VoronoiTreemap({ etfs }: VoronoiTreemapProps) {
               }}
             >
               <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                {hoveredCell.data.sector}
+                {hoveredCell.data.isTail
+                  ? t.pages.analyzer.dashboard.tabs.fundDetailsTab.voronoiTailSector
+                  : hoveredCell.data.sector}
               </div>
-              <div className="font-bold text-lg leading-tight mb-1">{hoveredCell.data.name}</div>
+              <div className="font-bold text-lg leading-tight mb-1">
+                {hoveredCell.data.isTail
+                  ? t.pages.analyzer.dashboard.tabs.fundDetailsTab.voronoiTailName
+                  : hoveredCell.data.name}
+              </div>
               <div className="flex justify-between items-center mt-3">
                 <span className="bg-primary/20 text-primary text-xs px-2 py-1 rounded font-mono">
-                  {hoveredCell.data.ticker}
+                  {hoveredCell.data.isTail
+                    ? t.pages.analyzer.dashboard.tabs.fundDetailsTab.voronoiTailTicker
+                    : hoveredCell.data.ticker}
                 </span>
                 <span className="font-mono text-sm font-semibold">
                   {hoveredCell.data.weight.toFixed(2)}%

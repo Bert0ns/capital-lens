@@ -142,7 +142,8 @@ export function usePortfolioStorage(
     };
 
     loadInitialData();
-  }, [loadDefaults, t, setEtfs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Save to indexedDB whenever etfs change
   useEffect(() => {
