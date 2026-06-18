@@ -140,6 +140,13 @@ class GenericCsvParser implements CsvParserStrategy {
 
   async parse(file: File): Promise<ParseResult> {
     try {
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error(
+          `File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB exceeds 10MB limit`
+        );
+      }
+
       const data = await parseCustomCsv(file, this.config.headerKeywords);
 
       const errors: string[] = [];

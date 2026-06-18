@@ -13,7 +13,7 @@
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "fallow": "npx -y fallow"
+    "fallow": "pnpm exec fallow"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",

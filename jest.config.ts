@@ -33,7 +33,7 @@ const getConfig = async () => {
   const nextJestConfig = await createJestConfig(config)();
   return {
     ...nextJestConfig,
-    transformIgnorePatterns: ['/node_modules/(?!(d3-hierarchy|d3-voronoi-treemap)/)'],
+    transformIgnorePatterns: ['/node_modules/(?!(d3-hierarchy|d3-voronoi-treemap|d3-sankey)/)'],
   };
 };
 

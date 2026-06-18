@@ -12,7 +12,8 @@ export function calculateTerrainOverlapMatrix(etfs: EtfConfig[]): number[][] {
     const map = new Map<string, number>();
     etf.holdings.forEach((h) => {
       // Normalize weight relative to the ETF itself (so sum is 1)
-      map.set(h.ticker, h.weight / 100);
+      const key = h.ticker !== 'N/A' ? h.ticker : h.name;
+      map.set(key, (map.get(key) || 0) + h.weight / 100);
     });
     return map;
   });

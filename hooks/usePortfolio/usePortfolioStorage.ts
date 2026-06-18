@@ -7,6 +7,18 @@ import { generateId } from '@/lib/utils';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { DEFAULT_ETFS, STORAGE_KEY } from './constants';
 
+function isValidEtfConfig(data: unknown): data is EtfConfig {
+  if (typeof data !== 'object' || data === null) return false;
+  const d = data as Record<string, unknown>;
+  return (
+    typeof d.name === 'string' &&
+    typeof d.globalWeight === 'number' &&
+    d.globalWeight >= 0 &&
+    d.globalWeight <= 100 &&
+    Array.isArray(d.holdings)
+  );
+}
+
 export function usePortfolioStorage(
   etfs: EtfConfig[],
   setEtfs: React.Dispatch<React.SetStateAction<EtfConfig[]>>
@@ -96,7 +108,7 @@ export function usePortfolioStorage(
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        let parsed = await getItem<EtfConfig[]>(STORAGE_KEY);
+        let parsed = await getItem<unknown[]>(STORAGE_KEY);
 
         // Migrate from localStorage if indexedDB is empty
         if (!parsed) {
@@ -113,25 +125,28 @@ export function usePortfolioStorage(
 
         if (parsed && Array.isArray(parsed) && parsed.length > 0) {
           // Auto-migrate legacy data that is missing the new fields
-          parsed = parsed.map((etf: unknown) => {
+          const migrated = parsed.map((etf: unknown) => {
             const typedEtf = etf as Partial<EtfConfig>;
             const defaultMatch = DEFAULT_ETFS.find((d) => d.name === typedEtf.name);
             return {
               ...typedEtf,
-              id: typedEtf.id || generateId(),
-              isin: typedEtf.isin || defaultMatch?.isin || '',
+              id: typedEtf.id ?? generateId(),
+              isin: typedEtf.isin ?? defaultMatch?.isin ?? '',
               replicationMethod:
-                typedEtf.replicationMethod || defaultMatch?.replicationMethod || 'Physical',
-              fundSize: typedEtf.fundSize || defaultMatch?.fundSize || 0,
-              fundAge: typedEtf.fundAge || defaultMatch?.fundAge || 0,
-              useOfProfit: typedEtf.useOfProfit || defaultMatch?.useOfProfit || 'Accumulating',
-              domicile: typedEtf.domicile || defaultMatch?.domicile || 'Ireland',
+                typedEtf.replicationMethod ?? defaultMatch?.replicationMethod ?? 'Physical',
+              fundSize: typedEtf.fundSize ?? defaultMatch?.fundSize ?? 0,
+              fundAge: typedEtf.fundAge ?? defaultMatch?.fundAge ?? 0,
+              useOfProfit: typedEtf.useOfProfit ?? defaultMatch?.useOfProfit ?? 'Accumulating',
+              domicile: typedEtf.domicile ?? defaultMatch?.domicile ?? 'Ireland',
             } as EtfConfig;
           });
 
-          setEtfs(parsed as EtfConfig[]);
-          setIsLoaded(true);
-          return;
+          const validEtfs = migrated.filter(isValidEtfConfig);
+          if (validEtfs.length > 0) {
+            setEtfs(validEtfs);
+            setIsLoaded(true);
+            return;
+          }
         }
       } catch (e) {
         console.error('Failed to load portfolio from storage', e);

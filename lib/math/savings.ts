@@ -17,6 +17,14 @@ export function calculateSavingsPlanProjection(
   expectedReturn: number,
   stopAccumulatingMonths: number
 ): SavingsPlanResult {
+  if (years <= 0) {
+    return {
+      chartData: [{ year: 0, invested: initialInvestment, value: Math.round(initialInvestment) }],
+      finalTotalValue: initialInvestment,
+      finalInvested: initialInvestment,
+    };
+  }
+
   const data: SavingsPlanProjectionPoint[] = [];
   const monthlyRate = expectedReturn / 100 / 12;
   const totalMonths = years * 12;

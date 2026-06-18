@@ -1,4 +1,4 @@
-import { EtfConfig } from '@/lib/types';
+import { EtfConfig, Holding } from '@/lib/types';
 import { normalizeCountry } from './normalization';
 
 export interface HoldingSearchResult {
@@ -20,8 +20,7 @@ function initSearchQuery(query: string): string | null {
 
 function updateHoldingBreakdown(
   companiesList: HoldingSearchResult[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  holding: any,
+  holding: Holding,
   etf: EtfConfig,
   contribution: number
 ) {
@@ -47,8 +46,7 @@ function updateHoldingBreakdown(
 
 function iterateHoldings(
   etfs: EtfConfig[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  callback: (etf: EtfConfig, holding: any, globalMultiplier: number) => void
+  callback: (etf: EtfConfig, holding: Holding, globalMultiplier: number) => void
 ) {
   for (const etf of etfs) {
     if (etf.globalWeight <= 0) continue;

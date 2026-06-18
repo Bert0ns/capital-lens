@@ -5,7 +5,9 @@ import { ArrowRight, BarChart3, Globe, Layers, Zap, Shield, Sparkles } from 'luc
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 import { motion, Variants } from 'framer-motion';
-import Landing3DBackground from './Landing3DBackground';
+import dynamic from 'next/dynamic';
+
+const Landing3DBackground = dynamic(() => import('./Landing3DBackground'), { ssr: false });
 
 export default function LandingContent() {
   const { t } = useTranslation();

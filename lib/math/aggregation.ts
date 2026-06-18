@@ -1,5 +1,5 @@
 import { EtfConfig } from '@/lib/types';
-import { normalizeSector } from './normalization';
+import { normalizeSector, normalizeCountry } from './normalization';
 
 export interface AggregationResult {
   name: string;
@@ -30,6 +30,8 @@ export function aggregateBy(
 
       if (key === 'sector') {
         groupingKey = normalizeSector(groupingKey);
+      } else if (key === 'country') {
+        groupingKey = normalizeCountry(groupingKey);
       }
 
       map.set(groupingKey, (map.get(groupingKey) || 0) + actualWeight);

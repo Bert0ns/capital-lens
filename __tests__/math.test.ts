@@ -184,7 +184,7 @@ describe('Math Utilities', () => {
     describe('General Aggregation Edge Cases', () => {
       it('aggregates by country correctly', () => {
         const results = aggregateBy(mockEtfs, 'country');
-        const usCountry = results.find((r) => r.name === 'US');
+        const usCountry = results.find((r) => r.name === 'United States');
 
         // ETF 1: US (15% of 50% = 7.5)
         // ETF 2: US (4% of 50% = 2)
@@ -497,6 +497,68 @@ describe('Math Utilities', () => {
       const result = calculateMechanicsData([]);
       expect(result.topEtfs).toEqual([]);
       expect(result.axesData).toEqual([]);
+    });
+
+    it('calculates correct scores for ETFs based on diversification, cost, age, and size', () => {
+      const etfs: EtfConfig[] = [
+        {
+          id: '1',
+          name: 'Good ETF',
+          issuer: 'Vanguard',
+          ter: 0.1, // Low cost = high score
+          globalWeight: 100,
+          replicationMethod: 'Physical',
+          useOfProfit: 'Accumulating',
+          domicile: 'Ireland',
+          fundAge: 10, // Old = high score
+          fundSize: 5000, // Large = high score
+          holdings: [
+            { name: 'A', ticker: 'A', weight: 50, sector: 'IT', country: 'US', currency: 'USD' },
+            { name: 'B', ticker: 'B', weight: 50, sector: 'IT', country: 'US', currency: 'USD' },
+          ], // Low diversification = low score
+        },
+        {
+          id: '2',
+          name: 'Bad ETF',
+          issuer: 'iShares',
+          ter: 0.8, // High cost = low score
+          globalWeight: 100,
+          replicationMethod: 'Synthetic',
+          useOfProfit: 'Accumulating',
+          domicile: 'Luxembourg',
+          fundAge: 1, // Young = low score
+          fundSize: 50, // Small = low score
+          holdings: [
+            { name: 'A', ticker: 'A', weight: 20, sector: 'IT', country: 'US', currency: 'USD' },
+            { name: 'B', ticker: 'B', weight: 20, sector: 'IT', country: 'US', currency: 'USD' },
+            { name: 'C', ticker: 'C', weight: 20, sector: 'IT', country: 'US', currency: 'USD' },
+            { name: 'D', ticker: 'D', weight: 20, sector: 'IT', country: 'US', currency: 'USD' },
+            { name: 'E', ticker: 'E', weight: 20, sector: 'IT', country: 'US', currency: 'USD' },
+          ], // High diversification = high score
+        },
+      ];
+
+      const result = calculateMechanicsData(etfs);
+      expect(result.topEtfs.length).toBe(2);
+
+      const goodEtf = result.topEtfs.find((e) => e.name === 'Good ETF');
+      const badEtf = result.topEtfs.find((e) => e.name === 'Bad ETF');
+
+      expect(goodEtf).toBeDefined();
+      expect(badEtf).toBeDefined();
+
+      const costData = result.axesData.find((a) => a.key === 'cost');
+      const divData = result.axesData.find((a) => a.key === 'diversification');
+      const sizeData = result.axesData.find((a) => a.key === 'size');
+      const ageData = result.axesData.find((a) => a.key === 'age');
+
+      // Good ETF should have better cost, age, and size scores
+      expect(costData!.scores['Good ETF']).toBeGreaterThan(costData!.scores['Bad ETF']);
+      expect(ageData!.scores['Good ETF']).toBeGreaterThan(ageData!.scores['Bad ETF']);
+      expect(sizeData!.scores['Good ETF']).toBeGreaterThan(sizeData!.scores['Bad ETF']);
+
+      // Bad ETF should have a better diversification score
+      expect(divData!.scores['Bad ETF']).toBeGreaterThan(divData!.scores['Good ETF']);
     });
   });
 });
