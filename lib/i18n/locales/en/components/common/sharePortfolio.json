@@ -1,0 +1,15 @@
+{
+  "share": "Share",
+  "import": "Import",
+  "title": "Share Portfolio",
+  "profile": "Portfolio Profile",
+  "allocation": "Allocation",
+  "topSectors": "Top Sectors",
+  "smartImageDesc": "SMART IMAGE / CONTAINS DATA",
+  "btnDownloadPng": "Download Smart Image",
+  "btnGenerating": "Generating...",
+  "btnDownloadLens": "Download .lens Cartridge (Safe Fallback)",
+  "fallbackDesc": "The Smart Image contains your full portfolio data. Social media apps may strip this data when sharing. Use the .lens cartridge if that happens.",
+  "dropTitle": "Drop Smart Image or .lens Cartridge",
+  "dropSubtitle": "to load portfolio"
+}

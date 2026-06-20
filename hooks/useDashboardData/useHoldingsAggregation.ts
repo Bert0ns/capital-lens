@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { EtfConfig } from '@/lib/types';
-import { normalizeSector, normalizeCountry } from '@/lib/math';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 export function useHoldingsAggregation(etfs: EtfConfig[]) {
@@ -17,8 +16,8 @@ export function useHoldingsAggregation(etfs: EtfConfig[]) {
         const holdingWeight = (h.weight * etf.globalWeight) / 100;
         if (holdingWeight <= 0) return;
 
-        const country = normalizeCountry(String(h.country || 'Unknown'));
-        const sector = normalizeSector(String(h.sector || 'Unknown'));
+        const country = String(h.country || 'Unknown');
+        const sector = String(h.sector || 'Unknown');
         const currency = String(h.currency || 'Unknown');
 
         geoMap.set(country, (geoMap.get(country) || 0) + holdingWeight);

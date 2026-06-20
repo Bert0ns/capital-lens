@@ -1,0 +1,194 @@
+import pako from 'pako';
+import { EtfConfig } from '../types';
+
+import extractChunks from 'png-chunks-extract';
+import encodeChunks from 'png-chunks-encode';
+import textChunk from 'png-chunk-text';
+
+const CURRENT_VERSION = 1;
+const CHUNK_KEYWORD = 'lens-portfolio';
+
+export interface PortfolioPayload {
+  version: number;
+  data: EtfConfig[];
+}
+
+function isValidEtfConfig(item: unknown): item is EtfConfig {
+  if (typeof item !== 'object' || item === null) return false;
+  const e = item as Record<string, unknown>;
+  return (
+    typeof e.id === 'string' &&
+    typeof e.name === 'string' &&
+    (e.isin === undefined || typeof e.isin === 'string') &&
+    typeof e.issuer === 'string' &&
+    typeof e.ter === 'number' &&
+    typeof e.globalWeight === 'number' &&
+    Array.isArray(e.holdings) &&
+    typeof e.replicationMethod === 'string' &&
+    typeof e.fundSize === 'number' &&
+    typeof e.fundAge === 'number' &&
+    typeof e.useOfProfit === 'string' &&
+    typeof e.domicile === 'string'
+  );
+}
+
+function validatePortfolioPayload(payload: unknown): payload is PortfolioPayload {
+  if (typeof payload !== 'object' || payload === null) return false;
+  const p = payload as Record<string, unknown>;
+  return typeof p.version === 'number' && Array.isArray(p.data) && p.data.every(isValidEtfConfig);
+}
+
+/**
+ * Compresses the portfolio configuration into a tightly packed Uint8Array using Deflate.
+ */
+function compressPortfolio(config: EtfConfig[]): Uint8Array {
+  const payload: PortfolioPayload = {
+    version: CURRENT_VERSION,
+    data: config,
+  };
+
+  const jsonString = JSON.stringify(payload);
+  return pako.deflate(jsonString);
+}
+
+/**
+ * Decompresses a deflate Uint8Array back into an EtfConfig array.
+ */
+function decompressPortfolio(compressedData: Uint8Array): EtfConfig[] {
+  try {
+    const jsonString = pako.inflate(compressedData, { to: 'string' });
+    const payload = JSON.parse(jsonString);
+
+    if (!validatePortfolioPayload(payload)) {
+      throw new Error('Invalid portfolio schema format.');
+    }
+
+    // Here we can handle migrations based on payload.version in the future
+    if (payload.version > CURRENT_VERSION) {
+      console.warn(
+        `Payload version ${payload.version} is newer than current version ${CURRENT_VERSION}`
+      );
+    }
+
+    return payload.data;
+  } catch (err) {
+    console.error('Failed to decompress portfolio data:', err);
+    throw new Error('Invalid or corrupted portfolio data.');
+  }
+}
+
+/**
+ * Creates a .lens Blob from the portfolio configuration.
+ */
+export function exportPortfolioToLens(config: EtfConfig[]): Blob {
+  const compressedData = compressPortfolio(config);
+  return new Blob([compressedData as unknown as BlobPart], { type: 'application/octet-stream' });
+}
+
+/**
+ * Parses a .lens File back into the portfolio configuration.
+ */
+export async function importPortfolioFromLens(file: File): Promise<EtfConfig[]> {
+  const arrayBuffer = await file.arrayBuffer();
+  const compressedData = new Uint8Array(arrayBuffer);
+  return decompressPortfolio(compressedData);
+}
+
+/**
+ * Converts a base64 Data URL to a Uint8Array.
+ */
+function dataUrlToUint8Array(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.split(',')[1];
+  const binaryString = atob(base64);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/**
+ * Injects compressed portfolio data into a PNG data URL, returning a new Blob.
+ */
+export function exportPortfolioToSmartPNG(config: EtfConfig[], pngDataUrl: string): Blob {
+  const compressedData = compressPortfolio(config);
+
+  // We need to encode the compressed binary data as base64 so it can fit in a standard tEXt chunk.
+  // Standard tEXt chunks expect latin1 strings. We iterate explicitly to avoid RangeError limits on large portfolios.
+  let binaryString = '';
+  const len = compressedData.byteLength;
+  for (let i = 0; i < len; i++) {
+    binaryString += String.fromCharCode(compressedData[i]);
+  }
+  const base64Payload = btoa(binaryString);
+
+  const pngBuffer = dataUrlToUint8Array(pngDataUrl);
+  const chunks = extractChunks(pngBuffer);
+
+  const newChunk = textChunk.encode(CHUNK_KEYWORD, base64Payload);
+
+  // Insert before the IEND chunk (which is always the last chunk)
+  chunks.splice(chunks.length - 1, 0, newChunk);
+
+  const outputBuffer = encodeChunks(chunks);
+  return new Blob([outputBuffer as unknown as BlobPart], { type: 'image/png' });
+}
+
+/**
+ * Extracts portfolio data from a Smart PNG File.
+ */
+export async function importPortfolioFromSmartPNG(file: File): Promise<EtfConfig[]> {
+  const arrayBuffer = await file.arrayBuffer();
+  const pngBuffer = new Uint8Array(arrayBuffer);
+
+  try {
+    const chunks = extractChunks(pngBuffer);
+    const textChunks = chunks
+      .filter((chunk: { name: string; data: Uint8Array }) => chunk.name === 'tEXt')
+      .map((chunk: { name: string; data: Uint8Array }) => textChunk.decode(chunk.data));
+
+    const payloadChunk = textChunks.find(
+      (chunk: { keyword: string; text: string }) => chunk.keyword === CHUNK_KEYWORD
+    );
+
+    if (!payloadChunk) {
+      throw new Error('No portfolio data found in this image.');
+    }
+
+    const base64Payload = payloadChunk.text;
+    const binaryString = atob(base64Payload);
+    const compressedData = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      compressedData[i] = binaryString.charCodeAt(i);
+    }
+
+    return decompressPortfolio(compressedData);
+  } catch (err) {
+    console.error('Failed to parse PNG chunks:', err);
+    throw new Error(
+      'Failed to extract portfolio from image. The image may have been compressed or stripped by a social network.'
+    );
+  }
+}
+
+export const MAX_PORTFOLIO_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+/**
+ * Unified entry point for importing a portfolio from any supported file type.
+ * Validates file size and dispatches to the correct parser.
+ *
+ * @throws {Error} 'FILE_TOO_LARGE' if the file exceeds the size limit.
+ * @throws {Error} 'UNSUPPORTED_TYPE' if the file type is not recognized.
+ */
+export async function importPortfolioFromFile(file: File): Promise<EtfConfig[]> {
+  if (file.size > MAX_PORTFOLIO_FILE_SIZE) {
+    throw new Error('FILE_TOO_LARGE');
+  }
+  if (file.name.endsWith('.lens')) {
+    return importPortfolioFromLens(file);
+  }
+  if (file.type === 'image/png') {
+    return importPortfolioFromSmartPNG(file);
+  }
+  throw new Error('UNSUPPORTED_TYPE');
+}

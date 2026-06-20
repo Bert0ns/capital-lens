@@ -4,6 +4,7 @@ import en_analyzer from '@/lib/i18n/locales/en/pages/analyzer/main.json';
 import en_navbar from '@/lib/i18n/locales/en/components/common/navbar.json';
 import en_languageSwitcher from '@/lib/i18n/locales/en/components/common/languageSwitcher.json';
 import en_notifications from '@/lib/i18n/locales/en/components/common/notifications.json';
+import en_sharePortfolio from '@/lib/i18n/locales/en/components/common/sharePortfolio.json';
 import en_etfForm from '@/lib/i18n/locales/en/pages/analyzer/components/etfForm.json';
 import en_portfolioSliders from '@/lib/i18n/locales/en/pages/analyzer/components/portfolioSliders.json';
 import en_savingsPlan from '@/lib/i18n/locales/en/pages/analyzer/components/savingsPlan.json';
@@ -25,6 +26,7 @@ import it_analyzer from '@/lib/i18n/locales/it/pages/analyzer/main.json';
 import it_navbar from '@/lib/i18n/locales/it/components/common/navbar.json';
 import it_languageSwitcher from '@/lib/i18n/locales/it/components/common/languageSwitcher.json';
 import it_notifications from '@/lib/i18n/locales/it/components/common/notifications.json';
+import it_sharePortfolio from '@/lib/i18n/locales/it/components/common/sharePortfolio.json';
 import it_etfForm from '@/lib/i18n/locales/it/pages/analyzer/components/etfForm.json';
 import it_portfolioSliders from '@/lib/i18n/locales/it/pages/analyzer/components/portfolioSliders.json';
 import it_savingsPlan from '@/lib/i18n/locales/it/pages/analyzer/components/savingsPlan.json';
@@ -73,6 +75,7 @@ export const dictionaries = {
         navbar: en_navbar,
         languageSwitcher: en_languageSwitcher,
         notifications: en_notifications,
+        sharePortfolio: en_sharePortfolio,
       },
     },
     data: {
@@ -113,6 +116,7 @@ export const dictionaries = {
         navbar: it_navbar,
         languageSwitcher: it_languageSwitcher,
         notifications: it_notifications,
+        sharePortfolio: it_sharePortfolio,
       },
     },
     data: {

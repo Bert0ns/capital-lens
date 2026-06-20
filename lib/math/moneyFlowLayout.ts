@@ -1,6 +1,5 @@
 import { sankey, sankeyJustify } from 'd3-sankey';
 import { EtfConfig } from '@/lib/types';
-import { normalizeSector } from '@/lib/math';
 
 export interface FlowNode {
   id: string;
@@ -92,7 +91,7 @@ export function generateMoneyFlowData(etfs: EtfConfig[], topCompaniesCount: numb
       const value = (etf.globalWeight * Number(h.weight)) / 100;
       if (value <= 0 || isNaN(value)) return;
 
-      const sectorName = normalizeSector(h.sector) || 'Unknown';
+      const sectorName = h.sector || 'Unknown';
       const sectorId = addNode(`SEC_${sectorName}`, 'sector', sectorName);
 
       const baseCompId = `COMP_${h.ticker !== 'N/A' ? h.ticker : h.name}`;

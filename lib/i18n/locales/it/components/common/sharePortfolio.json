@@ -1,0 +1,15 @@
+{
+  "share": "Condividi",
+  "import": "Importa",
+  "title": "Condividi Portafoglio",
+  "profile": "Profilo Portafoglio",
+  "allocation": "Allocazione",
+  "topSectors": "Settori Principali",
+  "smartImageDesc": "SMART IMAGE / CONTIENE DATI",
+  "btnDownloadPng": "Scarica Smart Image",
+  "btnGenerating": "Generazione...",
+  "btnDownloadLens": "Scarica Cartuccia .lens (Safe Fallback)",
+  "fallbackDesc": "La Smart Image contiene i dati completi del tuo portafoglio. Le app di social media potrebbero rimuovere questi dati durante la condivisione. Usa la cartuccia .lens se ciò accade.",
+  "dropTitle": "Rilascia Smart Image o Cartuccia .lens",
+  "dropSubtitle": "per caricare il portafoglio"
+}

@@ -2,5 +2,6 @@
   "parsingDefaults": "Parsing Default Nodes...",
   "initializing": "Initializing Workspace...",
   "hidePortfolioSetup": "Hide Portfolio Setup",
-  "managePortfolio": "Manage Portfolio"
+  "managePortfolio": "Manage Portfolio",
+  "tipDragDrop": "💡 Tip: You can drag & drop a Smart PNG or .lens file anywhere to import instantly."
 }
