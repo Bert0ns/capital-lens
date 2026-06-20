@@ -18,7 +18,6 @@ import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 interface SharePortfolioDialogProps {
   etfs: EtfConfig[];
-  totalWeight: number;
 }
 
 export function SharePortfolioDialog({ etfs }: SharePortfolioDialogProps) {

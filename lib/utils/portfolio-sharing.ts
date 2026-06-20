@@ -1,10 +1,6 @@
 import pako from 'pako';
 import { EtfConfig } from '../types';
 
-// We will use standard string manipulation or simple binary extraction if png-chunks fails,
-// but we will assume png-chunks-extract works for now.
-// Since these might not have types immediately available if the install fails, we will dynamically import or use require if needed,
-// but standard ES imports are preferred. We'll use any for now for the chunk manipulators to avoid strict type errors.
 import extractChunks from 'png-chunks-extract';
 import encodeChunks from 'png-chunks-encode';
 import textChunk from 'png-chunk-text';
@@ -23,10 +19,16 @@ function isValidEtfConfig(item: unknown): item is EtfConfig {
   return (
     typeof e.id === 'string' &&
     typeof e.name === 'string' &&
+    (e.isin === undefined || typeof e.isin === 'string') &&
     typeof e.issuer === 'string' &&
     typeof e.ter === 'number' &&
     typeof e.globalWeight === 'number' &&
-    Array.isArray(e.holdings)
+    Array.isArray(e.holdings) &&
+    typeof e.replicationMethod === 'string' &&
+    typeof e.fundSize === 'number' &&
+    typeof e.fundAge === 'number' &&
+    typeof e.useOfProfit === 'string' &&
+    typeof e.domicile === 'string'
   );
 }
 
@@ -167,4 +169,26 @@ export async function importPortfolioFromSmartPNG(file: File): Promise<EtfConfig
       'Failed to extract portfolio from image. The image may have been compressed or stripped by a social network.'
     );
   }
+}
+
+export const MAX_PORTFOLIO_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+/**
+ * Unified entry point for importing a portfolio from any supported file type.
+ * Validates file size and dispatches to the correct parser.
+ *
+ * @throws {Error} 'FILE_TOO_LARGE' if the file exceeds the size limit.
+ * @throws {Error} 'UNSUPPORTED_TYPE' if the file type is not recognized.
+ */
+export async function importPortfolioFromFile(file: File): Promise<EtfConfig[]> {
+  if (file.size > MAX_PORTFOLIO_FILE_SIZE) {
+    throw new Error('FILE_TOO_LARGE');
+  }
+  if (file.name.endsWith('.lens')) {
+    return importPortfolioFromLens(file);
+  }
+  if (file.type === 'image/png') {
+    return importPortfolioFromSmartPNG(file);
+  }
+  throw new Error('UNSUPPORTED_TYPE');
 }

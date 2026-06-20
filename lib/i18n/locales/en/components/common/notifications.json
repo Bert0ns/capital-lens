@@ -17,5 +17,6 @@
   "exportLensSuccessDesc": "Safe fallback exported successfully.",
   "exportFailed": "Export failed",
   "exportFailedDescPNG": "Could not generate the image.",
-  "exportFailedDescLens": "Could not generate data cartridge."
+  "exportFailedDescLens": "Could not generate data cartridge.",
+  "fileSizeExceeded": "File size exceeds the 5MB limit."
 }

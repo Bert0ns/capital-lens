@@ -2,10 +2,7 @@
 
 import { useState, useEffect, ReactNode } from 'react';
 import { DownloadCloud } from 'lucide-react';
-import {
-  importPortfolioFromLens,
-  importPortfolioFromSmartPNG,
-} from '@/lib/utils/portfolio-sharing';
+import { importPortfolioFromFile } from '@/lib/utils/portfolio-sharing';
 import { toast } from 'sonner';
 import { EtfConfig } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
@@ -54,22 +51,8 @@ export function GlobalDropzone({ children, onImport }: GlobalDropzoneProps) {
 
       const file = files[0];
 
-      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-      if (file.size > MAX_FILE_SIZE) {
-        toast.error(n.importFailed, { description: 'File size exceeds the 5MB limit.' });
-        return;
-      }
-
       try {
-        let etfs: EtfConfig[] = [];
-        if (file.name.endsWith('.lens')) {
-          etfs = await importPortfolioFromLens(file);
-        } else if (file.type === 'image/png') {
-          etfs = await importPortfolioFromSmartPNG(file);
-        } else {
-          return; // Ignore other files (might be CSVs handled elsewhere)
-        }
-
+        const etfs = await importPortfolioFromFile(file);
         if (etfs.length > 0) {
           onImport(etfs);
           toast.success(n.importSuccess, {
@@ -78,6 +61,13 @@ export function GlobalDropzone({ children, onImport }: GlobalDropzoneProps) {
         }
       } catch (err) {
         const error = err as Error;
+        if (error.message === 'UNSUPPORTED_TYPE') {
+          return; // Ignore other files (might be CSVs handled elsewhere)
+        }
+        if (error.message === 'FILE_TOO_LARGE') {
+          toast.error(n.importFailed, { description: n.fileSizeExceeded });
+          return;
+        }
         toast.error(n.importFailed, {
           description: error.message || n.importFailedDesc,
         });
@@ -95,7 +85,14 @@ export function GlobalDropzone({ children, onImport }: GlobalDropzoneProps) {
       window.removeEventListener('dragleave', handleDragLeave);
       window.removeEventListener('drop', handleDrop);
     };
-  }, [onImport, n.importFailed, n.importFailedDesc, n.importSuccess, n.importSuccessDesc]);
+  }, [
+    onImport,
+    n.importFailed,
+    n.importFailedDesc,
+    n.importSuccess,
+    n.importSuccessDesc,
+    n.fileSizeExceeded,
+  ]);
 
   return (
     <>

@@ -70,7 +70,7 @@ export default function AnalyzerContent() {
                     {isSlidersOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                   </button>
                   <ImportPortfolioButton onImport={setEtfs} />
-                  <SharePortfolioDialog etfs={etfs} totalWeight={totalWeight} />
+                  <SharePortfolioDialog etfs={etfs} />
                 </div>
 
                 {isSlidersOpen && (

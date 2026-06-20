@@ -4,10 +4,7 @@ import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Download } from 'lucide-react';
-import {
-  importPortfolioFromLens,
-  importPortfolioFromSmartPNG,
-} from '@/lib/utils/portfolio-sharing';
+import { importPortfolioFromFile } from '@/lib/utils/portfolio-sharing';
 import { toast } from 'sonner';
 import { EtfConfig } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
@@ -28,24 +25,9 @@ export function ImportPortfolioButton({ onImport }: ImportPortfolioButtonProps) 
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-    if (file.size > MAX_FILE_SIZE) {
-      toast.error(n.importFailed, { description: 'File size exceeds the 5MB limit.' });
-      if (fileInputRef.current) fileInputRef.current.value = '';
-      return;
-    }
 
     try {
-      let etfs: EtfConfig[] = [];
-      if (file.name.endsWith('.lens')) {
-        etfs = await importPortfolioFromLens(file);
-      } else if (file.type === 'image/png') {
-        etfs = await importPortfolioFromSmartPNG(file);
-      } else {
-        toast.error(n.invalidType, { description: n.invalidTypeDesc });
-        return;
-      }
-
+      const etfs = await importPortfolioFromFile(file);
       if (etfs.length > 0) {
         onImport(etfs);
         toast.success(n.importSuccess, {
@@ -54,9 +36,15 @@ export function ImportPortfolioButton({ onImport }: ImportPortfolioButtonProps) 
       }
     } catch (err) {
       const error = err as Error;
-      toast.error(n.importFailed, {
-        description: error.message || n.importFailedDesc,
-      });
+      if (error.message === 'UNSUPPORTED_TYPE') {
+        toast.error(n.invalidType, { description: n.invalidTypeDesc });
+      } else if (error.message === 'FILE_TOO_LARGE') {
+        toast.error(n.importFailed, { description: n.fileSizeExceeded });
+      } else {
+        toast.error(n.importFailed, {
+          description: error.message || n.importFailedDesc,
+        });
+      }
     }
 
     // Reset input so the same file can be selected again

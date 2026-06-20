@@ -17,5 +17,6 @@
   "exportLensSuccessDesc": "Safe fallback esportato con successo.",
   "exportFailed": "Esportazione fallita",
   "exportFailedDescPNG": "Impossibile generare l'immagine.",
-  "exportFailedDescLens": "Impossibile generare la cartuccia dati."
+  "exportFailedDescLens": "Impossibile generare la cartuccia dati.",
+  "fileSizeExceeded": "La dimensione del file supera il limite di 5MB."
 }
