@@ -2,6 +2,7 @@
 
 import { useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Download } from 'lucide-react';
 import {
   importPortfolioFromLens,
@@ -9,12 +10,17 @@ import {
 } from '@/lib/utils/portfolio-sharing';
 import { toast } from 'sonner';
 import { EtfConfig } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 interface ImportPortfolioButtonProps {
   onImport: (etfs: EtfConfig[]) => void;
 }
 
 export function ImportPortfolioButton({ onImport }: ImportPortfolioButtonProps) {
+  const { t } = useTranslation();
+  const n = t.components.common.notifications;
+  const s = t.components.common.sharePortfolio;
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,22 +35,20 @@ export function ImportPortfolioButton({ onImport }: ImportPortfolioButtonProps) 
       } else if (file.type === 'image/png') {
         etfs = await importPortfolioFromSmartPNG(file);
       } else {
-        toast.error('Invalid file type', {
-          description: 'Please select a .lens file or a Smart PNG.',
-        });
+        toast.error(n.invalidType, { description: n.invalidTypeDesc });
         return;
       }
 
       if (etfs.length > 0) {
         onImport(etfs);
-        toast.success('Portfolio Loaded', {
-          description: 'Successfully imported from ' + file.name,
+        toast.success(n.importSuccess, {
+          description: n.importSuccessDesc + file.name,
         });
       }
     } catch (err) {
       const error = err as Error;
-      toast.error('Import failed', {
-        description: error.message || 'Could not parse portfolio file.',
+      toast.error(n.importFailed, {
+        description: error.message || n.importFailedDesc,
       });
     }
 
@@ -63,14 +67,29 @@ export function ImportPortfolioButton({ onImport }: ImportPortfolioButtonProps) 
         accept=".lens,image/png"
         className="hidden"
       />
-      <Button
-        variant="outline"
-        className="gap-2 shrink-0 border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <Download size={16} className="rotate-180" />
-        Import
-      </Button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="outline"
+                className="gap-2 shrink-0 h-auto py-3 px-4 rounded-xl font-semibold border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Download size={16} className="rotate-180" />
+                {s.import}
+              </Button>
+            }
+          />
+          <TooltipContent
+            side="bottom"
+            sideOffset={12}
+            className="max-w-[200px] text-center border border-primary/50 bg-background/95 backdrop-blur-sm text-primary shadow-[0_0_15px_rgba(34,211,238,0.2)]"
+          >
+            {t.pages.analyzer.main.tipDragDrop}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </>
   );
 }

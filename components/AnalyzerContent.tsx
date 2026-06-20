@@ -72,10 +72,6 @@ export default function AnalyzerContent() {
                   <ImportPortfolioButton onImport={setEtfs} />
                   <SharePortfolioDialog etfs={etfs} totalWeight={totalWeight} />
                 </div>
-                <p className="text-[10px] text-muted-foreground/60 text-center mt-2 mb-1 animate-pulse">
-                  💡 Tip: You can drag & drop a Smart PNG or .lens file anywhere to import
-                  instantly.
-                </p>
 
                 {isSlidersOpen && (
                   <div className="flex-1 min-h-0 mt-2 flex flex-col animate-in fade-in slide-in-from-top-4 duration-500">

@@ -4,5 +4,18 @@
   "defaultsLoaded": "Predefiniti Caricati",
   "defaultsLoadedDesc": "Il portafoglio di esempio predefinito è stato caricato.",
   "storageError": "Errore di Archiviazione",
-  "storageErrorDesc": "Impossibile ripristinare il portafoglio dalla memoria locale."
+  "storageErrorDesc": "Impossibile ripristinare il portafoglio dalla memoria locale.",
+  "importSuccess": "Portafoglio Caricato",
+  "importSuccessDesc": "Importato con successo da ",
+  "importFailed": "Importazione fallita",
+  "importFailedDesc": "Impossibile analizzare il file del portafoglio.",
+  "invalidType": "Tipo di file non valido",
+  "invalidTypeDesc": "Per favore seleziona un file .lens o una Smart PNG.",
+  "exportSmartSuccess": "Smart Image Esportata",
+  "exportSmartSuccessDesc": "Condividi questa PNG con gli amici. Possono trascinarla in Capital Lens per caricare il tuo portafoglio.",
+  "exportLensSuccess": "Cartuccia Dati Esportata",
+  "exportLensSuccessDesc": "Safe fallback esportato con successo.",
+  "exportFailed": "Esportazione fallita",
+  "exportFailedDescPNG": "Impossibile generare l'immagine.",
+  "exportFailedDescLens": "Impossibile generare la cartuccia dati."
 }

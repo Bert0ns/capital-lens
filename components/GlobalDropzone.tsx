@@ -8,6 +8,7 @@ import {
 } from '@/lib/utils/portfolio-sharing';
 import { toast } from 'sonner';
 import { EtfConfig } from '@/lib/types';
+import { useTranslation } from '@/lib/i18n/LanguageContext';
 
 interface GlobalDropzoneProps {
   children: ReactNode;
@@ -15,6 +16,10 @@ interface GlobalDropzoneProps {
 }
 
 export function GlobalDropzone({ children, onImport }: GlobalDropzoneProps) {
+  const { t } = useTranslation();
+  const n = t.components.common.notifications;
+  const s = t.components.common.sharePortfolio;
+
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
@@ -54,14 +59,14 @@ export function GlobalDropzone({ children, onImport }: GlobalDropzoneProps) {
 
         if (etfs.length > 0) {
           onImport(etfs);
-          toast.success('Portfolio Loaded', {
-            description: 'Successfully imported from ' + file.name,
+          toast.success(n.importSuccess, {
+            description: n.importSuccessDesc + file.name,
           });
         }
       } catch (err) {
         const error = err as Error;
-        toast.error('Import failed', {
-          description: error.message || 'Could not parse portfolio file.',
+        toast.error(n.importFailed, {
+          description: error.message || n.importFailedDesc,
         });
       }
     };
@@ -75,7 +80,7 @@ export function GlobalDropzone({ children, onImport }: GlobalDropzoneProps) {
       window.removeEventListener('dragleave', handleDragLeave);
       window.removeEventListener('drop', handleDrop);
     };
-  }, [onImport]);
+  }, [onImport, n.importFailed, n.importFailedDesc, n.importSuccess, n.importSuccessDesc]);
 
   return (
     <>
@@ -85,8 +90,8 @@ export function GlobalDropzone({ children, onImport }: GlobalDropzoneProps) {
           <div className="flex flex-col items-center gap-4 text-primary pointer-events-none">
             <DownloadCloud size={64} className="animate-bounce" />
             <h2 className="text-3xl font-bold tracking-widest uppercase text-center">
-              Drop Smart Image or .lens Cartridge <br />
-              <span className="text-sm opacity-70">to load portfolio</span>
+              {s.dropTitle} <br />
+              <span className="text-sm opacity-70">{s.dropSubtitle}</span>
             </h2>
           </div>
         </div>

@@ -4,5 +4,18 @@
   "defaultsLoaded": "Defaults Loaded",
   "defaultsLoadedDesc": "The default sample portfolio has been loaded.",
   "storageError": "Storage Error",
-  "storageErrorDesc": "Failed to restore portfolio from local storage."
+  "storageErrorDesc": "Failed to restore portfolio from local storage.",
+  "importSuccess": "Portfolio Loaded",
+  "importSuccessDesc": "Successfully imported from ",
+  "importFailed": "Import failed",
+  "importFailedDesc": "Could not parse portfolio file.",
+  "invalidType": "Invalid file type",
+  "invalidTypeDesc": "Please select a .lens file or a Smart PNG.",
+  "exportSmartSuccess": "Smart Image Exported",
+  "exportSmartSuccessDesc": "Share this PNG with friends. They can drag it into Capital Lens to load your portfolio.",
+  "exportLensSuccess": "Data Cartridge Exported",
+  "exportLensSuccessDesc": "Safe fallback exported successfully.",
+  "exportFailed": "Export failed",
+  "exportFailedDescPNG": "Could not generate the image.",
+  "exportFailedDescLens": "Could not generate data cartridge."
 }

@@ -1,6 +1,7 @@
 {
   "parsingDefaults": "Analisi dei Nodi Predefiniti...",
   "initializing": "Inizializzazione Workspace...",
-  "hidePortfolioSetup": "Nascondi Setup Portafoglio",
-  "managePortfolio": "Gestisci Portafoglio"
+  "hidePortfolioSetup": "Nascondi Configurazione",
+  "managePortfolio": "Gestisci Portafoglio",
+  "tipDragDrop": "💡 Suggerimento: Puoi trascinare e rilasciare una Smart PNG o un file .lens in qualsiasi punto per importarli all'istante."
 }
