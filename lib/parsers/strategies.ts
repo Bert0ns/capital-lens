@@ -1,5 +1,6 @@
 import Papa from 'papaparse';
 import { CsvParserStrategy, Holding, ParseResult } from '@/lib/types';
+import { normalizeSector, normalizeCountry } from '@/lib/math/normalization';
 
 // Helper to read file as text
 function readFile(file: File): Promise<string> {
@@ -188,8 +189,8 @@ class GenericCsvParser implements CsvParserStrategy {
             ticker: String(getField(this.config.fields.ticker) || 'N/A'),
             name: String(getField(this.config.fields.name) || 'Unknown'),
             weight: parseNumber(getField(this.config.fields.weight) || 0),
-            sector: String(getField(this.config.fields.sector) || 'Other'),
-            country: String(getField(this.config.fields.country) || 'Unknown'),
+            sector: normalizeSector(String(getField(this.config.fields.sector) || 'Other')),
+            country: normalizeCountry(String(getField(this.config.fields.country) || 'Unknown')),
             currency,
           };
         })

@@ -13,7 +13,6 @@ import {
 import { Share2, Download, FileJson } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import { exportPortfolioToLens, exportPortfolioToSmartPNG } from '@/lib/utils/portfolio-sharing';
-import { normalizeSector } from '@/lib/math/normalization';
 import { toast } from 'sonner';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
 
@@ -34,8 +33,7 @@ export function SharePortfolioDialog({ etfs }: SharePortfolioDialogProps) {
     return Array.from(
       etfs.reduce((acc, etf) => {
         etf.holdings.forEach((h) => {
-          const sector = normalizeSector(h.sector);
-          acc.set(sector, (acc.get(sector) || 0) + h.weight * (etf.globalWeight / 100));
+          acc.set(h.sector, (acc.get(h.sector) || 0) + h.weight * (etf.globalWeight / 100));
         });
         return acc;
       }, new Map<string, number>())

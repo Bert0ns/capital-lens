@@ -1,5 +1,4 @@
 import { EtfConfig } from '@/lib/types';
-import { normalizeSector } from '@/lib/math';
 
 interface HoldingData {
   name: string;
@@ -75,14 +74,13 @@ function buildSectorGroups(etfs: EtfConfig[]): SectorGroup[] {
     .forEach((etf) => {
       const etfWeight = etf.globalWeight;
       etf.holdings.forEach((h) => {
-        const normalizedSector = normalizeSector(h.sector);
-        const key = `${normalizedSector}-${h.name || h.ticker}`;
+        const key = `${h.sector}-${h.name || h.ticker}`;
         const absWeight = (h.weight / 100) * etfWeight;
 
         if (!holdingMap.has(key)) {
           holdingMap.set(key, {
             name: h.name || h.ticker,
-            sector: normalizedSector || 'Unknown',
+            sector: h.sector || 'Unknown',
             value: 0,
           });
         }

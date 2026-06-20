@@ -58,7 +58,7 @@ describe('CSV Parsing Strategies', () => {
       const parser = new VanguardParser();
       const result = await parser.parse(file);
 
-      expectAppleHolding(result, 'Technology', 'USA');
+      expectAppleHolding(result, 'Information Technology', 'United States');
     });
   });
 
@@ -70,7 +70,7 @@ describe('CSV Parsing Strategies', () => {
       const parser = new AmundiParser();
       const result = await parser.parse(file);
 
-      expectAppleHolding(result, 'IT', 'US');
+      expectAppleHolding(result, 'Information Technology', 'United States');
     });
   });
 
@@ -82,7 +82,7 @@ describe('CSV Parsing Strategies', () => {
       const parser = new LyxorParser();
       const result = await parser.parse(file);
 
-      expectAppleHolding(result, 'Tech', 'US');
+      expectAppleHolding(result, 'Information Technology', 'United States');
     });
   });
 

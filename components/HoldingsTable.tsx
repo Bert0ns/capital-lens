@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from 'react';
 import { Holding } from '@/lib/types';
 import { useTranslation } from '@/lib/i18n/LanguageContext';
-import { normalizeSector, normalizeCountry } from '@/lib/math';
 import {
   Table,
   TableBody,
@@ -84,13 +83,15 @@ export function HoldingsTable({ holdings }: HoldingsTableProps) {
               </TableRow>
             ) : (
               currentHoldings.map((h, i) => {
-                const canonSector = normalizeSector(String(h.sector || 'Unknown'));
                 const translatedSector =
-                  t.data.sectors[canonSector as keyof typeof t.data.sectors] || canonSector;
+                  t.data.sectors[(h.sector || 'Unknown') as keyof typeof t.data.sectors] ||
+                  h.sector ||
+                  'Unknown';
 
-                const canonCountry = normalizeCountry(String(h.country || 'Unknown'));
                 const translatedCountry =
-                  t.data.countries[canonCountry as keyof typeof t.data.countries] || canonCountry;
+                  t.data.countries[(h.country || 'Unknown') as keyof typeof t.data.countries] ||
+                  h.country ||
+                  'Unknown';
 
                 return (
                   <TableRow key={`${h.ticker}-${i}`} className="hover:bg-muted/30">

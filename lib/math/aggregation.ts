@@ -1,5 +1,4 @@
 import { EtfConfig } from '@/lib/types';
-import { normalizeSector, normalizeCountry } from './normalization';
 
 export interface AggregationResult {
   name: string;
@@ -26,13 +25,7 @@ export function aggregateBy(
     for (const holding of etf.holdings) {
       // holding.weight is also typically 0-100
       const actualWeight = holding.weight * globalMultiplier;
-      let groupingKey = holding[key] || 'Unknown';
-
-      if (key === 'sector') {
-        groupingKey = normalizeSector(groupingKey);
-      } else if (key === 'country') {
-        groupingKey = normalizeCountry(groupingKey);
-      }
+      const groupingKey = holding[key] || 'Unknown';
 
       map.set(groupingKey, (map.get(groupingKey) || 0) + actualWeight);
     }

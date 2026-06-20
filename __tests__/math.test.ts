@@ -23,13 +23,20 @@ describe('Math Utilities', () => {
       fundAge: 5,
       fundSize: 1000,
       holdings: [
-        { name: 'Apple', ticker: 'AAPL', weight: 10, sector: 'IT', country: 'US', currency: 'USD' },
+        {
+          name: 'Apple',
+          ticker: 'AAPL',
+          weight: 10,
+          sector: 'Information Technology',
+          country: 'United States',
+          currency: 'USD',
+        },
         {
           name: 'Microsoft',
           ticker: 'MSFT',
           weight: 5,
-          sector: 'Technology',
-          country: 'US',
+          sector: 'Information Technology',
+          country: 'United States',
           currency: 'USD',
         },
       ],
@@ -51,7 +58,7 @@ describe('Math Utilities', () => {
           ticker: 'AAPL',
           weight: 4,
           sector: 'Information Technology',
-          country: 'US',
+          country: 'United States',
           currency: 'USD',
         },
         {
@@ -59,7 +66,7 @@ describe('Math Utilities', () => {
           ticker: 'NESN',
           weight: 6,
           sector: 'Consumer Staples',
-          country: 'CH',
+          country: 'Switzerland',
           currency: 'CHF',
         },
       ],
@@ -78,7 +85,7 @@ describe('Math Utilities', () => {
         expect(itSector?.value).toBeCloseTo(9.5);
       });
 
-      it('normalizes various other sectors correctly', () => {
+      it('aggregates pre-normalized sectors correctly', () => {
         const customEtfs: EtfConfig[] = [
           {
             ...mockEtfs[0],
@@ -88,40 +95,40 @@ describe('Math Utilities', () => {
                 name: 'A',
                 ticker: 'A',
                 weight: 10,
-                sector: 'finanziari',
-                country: 'US',
+                sector: 'Financials',
+                country: 'United States',
                 currency: 'USD',
               },
               {
                 name: 'B',
                 ticker: 'B',
                 weight: 10,
-                sector: 'salute',
-                country: 'US',
+                sector: 'Healthcare',
+                country: 'United States',
                 currency: 'USD',
               },
               {
                 name: 'C',
                 ticker: 'C',
                 weight: 10,
-                sector: ' beni di consumo ',
-                country: 'US',
+                sector: 'Consumer Staples',
+                country: 'United States',
                 currency: 'USD',
               },
               {
                 name: 'D',
                 ticker: 'D',
                 weight: 10,
-                sector: 'pubblica utilità',
-                country: 'US',
+                sector: 'Utilities',
+                country: 'United States',
                 currency: 'USD',
               },
               {
                 name: 'E',
                 ticker: 'E',
                 weight: 10,
-                sector: 'immobiliare',
-                country: 'US',
+                sector: 'Real Estate',
+                country: 'United States',
                 currency: 'USD',
               },
             ],
@@ -136,30 +143,7 @@ describe('Math Utilities', () => {
         expect(results.find((r) => r.name === 'Real Estate')?.value).toBe(10);
       });
 
-      it('handles empty, Unknown, and N/A sectors', () => {
-        const customEtfs: EtfConfig[] = [
-          {
-            ...mockEtfs[0],
-            globalWeight: 100,
-            holdings: [
-              { name: 'A', ticker: 'A', weight: 10, sector: '', country: 'US', currency: 'USD' },
-              {
-                name: 'B',
-                ticker: 'B',
-                weight: 10,
-                sector: 'Unknown',
-                country: 'US',
-                currency: 'USD',
-              },
-              { name: 'C', ticker: 'C', weight: 10, sector: 'N/A', country: 'US', currency: 'USD' },
-            ],
-          },
-        ];
-        const results = aggregateBy(customEtfs, 'sector');
-        expect(results.find((r) => r.name === 'Unknown')?.value).toBe(30);
-      });
-
-      it('capitalizes fallback sectors', () => {
+      it('handles Unknown sectors', () => {
         const customEtfs: EtfConfig[] = [
           {
             ...mockEtfs[0],
@@ -169,15 +153,52 @@ describe('Math Utilities', () => {
                 name: 'A',
                 ticker: 'A',
                 weight: 10,
-                sector: 'random sector',
-                country: 'US',
+                sector: 'Unknown',
+                country: 'United States',
+                currency: 'USD',
+              },
+              {
+                name: 'B',
+                ticker: 'B',
+                weight: 10,
+                sector: 'Unknown',
+                country: 'United States',
+                currency: 'USD',
+              },
+              {
+                name: 'C',
+                ticker: 'C',
+                weight: 10,
+                sector: 'Unknown',
+                country: 'United States',
                 currency: 'USD',
               },
             ],
           },
         ];
         const results = aggregateBy(customEtfs, 'sector');
-        expect(results.find((r) => r.name === 'Random sector')?.value).toBe(10);
+        expect(results.find((r) => r.name === 'Unknown')?.value).toBe(30);
+      });
+
+      it('passes through uncommon sector names as-is', () => {
+        const customEtfs: EtfConfig[] = [
+          {
+            ...mockEtfs[0],
+            globalWeight: 100,
+            holdings: [
+              {
+                name: 'A',
+                ticker: 'A',
+                weight: 10,
+                sector: 'Aerospace',
+                country: 'United States',
+                currency: 'USD',
+              },
+            ],
+          },
+        ];
+        const results = aggregateBy(customEtfs, 'sector');
+        expect(results.find((r) => r.name === 'Aerospace')?.value).toBe(10);
       });
     });
 
@@ -411,7 +432,7 @@ describe('Math Utilities', () => {
     });
 
     it('groups results by canonical country name and aggregates correctly', () => {
-      const results = searchByCountry(mockEtfs, 'us'); // Should match 'US' (from AAPL and MSFT)
+      const results = searchByCountry(mockEtfs, 'united states');
 
       expect(results.length).toBe(1);
       const usResult = results[0];
