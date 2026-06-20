@@ -8,9 +8,15 @@ import { useTranslation } from '@/lib/i18n/LanguageContext';
 export function InstallPwaButton({
   className,
   variant = 'outline',
+  size = 'sm',
+  iconClassName = 'w-4 h-4',
+  textClassName = 'uppercase tracking-widest text-xs font-bold',
 }: {
   className?: string;
   variant?: 'outline' | 'default' | 'ghost' | 'secondary' | 'link' | 'destructive';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+  iconClassName?: string;
+  textClassName?: string;
 }) {
   const { t } = useTranslation();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,17 +46,15 @@ export function InstallPwaButton({
   return (
     <Button
       variant={variant}
-      size="sm"
+      size={size}
       onClick={handleInstallClick}
       className={
         className ||
         'hidden md:flex h-9 gap-2 border-primary/50 text-primary hover:bg-primary/20 bg-background/50 backdrop-blur-sm'
       }
     >
-      <Download className="w-4 h-4" />
-      <span className="uppercase tracking-widest text-xs font-bold">
-        {t.components.common.navbar.installApp}
-      </span>
+      <Download className={iconClassName} />
+      <span className={textClassName}>{t.components.common.navbar.installApp}</span>
     </Button>
   );
 }
