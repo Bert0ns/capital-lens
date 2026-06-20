@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next';
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Capital Lens',
-    short_name: 'CapLens',
+    short_name: 'CapitalLens',
     description: 'Analyze and visualize your custom ETF portfolio.',
     start_url: '/',
     display: 'standalone',
