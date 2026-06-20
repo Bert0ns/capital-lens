@@ -37,7 +37,17 @@ export default function manifest(): MetadataRoute.Manifest {
           files: [
             {
               name: 'portfolioFile',
-              accept: ['.csv', '.lens'],
+              accept: [
+                '*/*',
+                '.csv',
+                'text/csv',
+                '.lens',
+                'application/octet-stream',
+                'application/json',
+                '.png',
+                'image/png',
+                'image/*',
+              ],
             },
           ],
         },
