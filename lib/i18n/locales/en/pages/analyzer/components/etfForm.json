@@ -26,5 +26,6 @@
   "emptyFileDesc": "No valid holdings found in the CSV. Please check the file format.",
   "parsedWithWarnings": "Parsed with warnings",
   "parsedWithWarningsDesc": "The file was processed, but some data columns might be missing.",
-  "etfAdded": "ETF Added"
+  "etfAdded": "ETF Added",
+  "csvLoaded": "CSV loaded from share intent. Please complete the form."
 }
