@@ -17,7 +17,7 @@ export function PieChartCard({ title, info, data, colorOffset = 0 }: PieChartCar
       </CardHeader>
       <CardContent>
         <div style={{ width: '100%', height: 360, minWidth: 0 }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
             <PieChart>
               <Pie
                 data={data}

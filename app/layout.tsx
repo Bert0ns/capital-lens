@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import Navbar from '@/components/Navbar';
 import { LanguageProvider } from '@/lib/i18n/LanguageContext';
+import { RechartsWarningSuppressor } from '@/components/RechartsWarningSuppressor';
 import './globals.css';
 
 const inter = Inter({
@@ -36,6 +37,7 @@ export default function RootLayout({
         >
           <LanguageProvider>
             <TooltipProvider>
+              <RechartsWarningSuppressor />
               <Navbar />
               {children}
               <Toaster />
