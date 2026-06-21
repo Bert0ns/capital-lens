@@ -26,5 +26,6 @@
   "emptyFileDesc": "Nessuna partecipazione valida trovata nel CSV. Controlla il formato del file.",
   "parsedWithWarnings": "Elaborato con avvisi",
   "parsedWithWarningsDesc": "Il file è stato elaborato, ma alcune colonne di dati potrebbero mancare.",
-  "etfAdded": "ETF Aggiunto"
+  "etfAdded": "ETF Aggiunto",
+  "csvLoaded": "CSV caricato dalla condivisione. Completa il modulo."
 }
